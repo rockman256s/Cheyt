@@ -29,8 +29,7 @@ requirements = python3==3.11,\
     kivy==2.3.0,\
     kivymd==1.1.1,\
     pillow,\
-    numpy,\
-    sqlite3
+    numpy
 
 # (str) Supported orientation (one of landscape, portrait or all)
 orientation = portrait
