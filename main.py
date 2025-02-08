@@ -78,29 +78,53 @@ class WeightCalculator:
             return None
 
 def main(page: ft.Page):
+    # Настройка страницы для мобильного интерфейса
     page.title = "Прогноз веса"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.scroll = ft.ScrollMode.AUTO
-    page.padding = 20
+    page.padding = 10 if page.width < 600 else 20
     page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
+
+    # Адаптивный размер для мобильных устройств
+    def get_size(default, mobile):
+        return mobile if page.width < 600 else default
 
     calc = WeightCalculator()
 
-    # Заголовок
+    # Заголовок - адаптивный размер текста
     title = ft.Text(
         "Калькулятор веса на основе давления",
-        size=24,
+        size=get_size(24, 20),
         weight=ft.FontWeight.BOLD,
         text_align=ft.TextAlign.CENTER
     )
 
     description = ft.Text(
-        "Добавьте калибровочные точки (минимум 2) для расчета веса на основе давления. При "
-        "наличии двух точек используется линейная интерполяция, при большем количестве - "
-        "квадратичная.",
-        size=16,
+        "Добавьте калибровочные точки (минимум 2) для расчета веса на основе давления.",
+        size=get_size(16, 14),
         text_align=ft.TextAlign.CENTER,
+    )
+
+    # Поля ввода - адаптивная ширина
+    pressure_input = ft.TextField(
+        label="Давление",
+        width=get_size(400, page.width * 0.9),
+        text_align=ft.TextAlign.LEFT,
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+
+    weight_input = ft.TextField(
+        label="Вес",
+        width=get_size(400, page.width * 0.9),
+        text_align=ft.TextAlign.LEFT,
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+
+    result_text = ft.Text(
+        size=get_size(16, 14),
+        text_align=ft.TextAlign.CENTER,
+        color=ft.colors.BLACK
     )
 
     # График калибровки
@@ -204,20 +228,20 @@ def main(page: ft.Page):
     # Поля ввода
     pressure_input = ft.TextField(
         label="Давление",
-        width=400,
+        width=get_size(400, page.width * 0.9),
         text_align=ft.TextAlign.LEFT,
         keyboard_type=ft.KeyboardType.NUMBER,
     )
 
     weight_input = ft.TextField(
         label="Вес",
-        width=400,
+        width=get_size(400, page.width * 0.9),
         text_align=ft.TextAlign.LEFT,
         keyboard_type=ft.KeyboardType.NUMBER,
     )
 
     result_text = ft.Text(
-        size=16,
+        size=get_size(16, 14),
         text_align=ft.TextAlign.CENTER,
         color=ft.colors.BLACK
     )
@@ -225,7 +249,7 @@ def main(page: ft.Page):
     # График и таблица
     chart_container = ft.Container(
         content=create_chart(),
-        height=400,
+        height=get_size(400, 300),
         border=ft.border.all(1, ft.colors.GREY_400),
         border_radius=10,
         padding=10,
@@ -291,10 +315,10 @@ def main(page: ft.Page):
             result_text.color = ft.colors.RED
             page.update()
 
-    # Кнопки
+    # Кнопки - адаптивная ширина
     add_button = ft.ElevatedButton(
         "Добавить точку калибровки",
-        width=400,
+        width=get_size(400, page.width * 0.9),
         on_click=add_calibration_point,
         style=ft.ButtonStyle(
             color=ft.colors.WHITE,
@@ -305,7 +329,7 @@ def main(page: ft.Page):
 
     calc_button = ft.ElevatedButton(
         "Рассчитать вес",
-        width=400,
+        width=get_size(400, page.width * 0.9),
         on_click=calculate_result,
         style=ft.ButtonStyle(
             color=ft.colors.WHITE,
@@ -313,6 +337,26 @@ def main(page: ft.Page):
             shape=ft.RoundedRectangleBorder(radius=8),
         )
     )
+
+    # График - адаптивная высота
+    chart_container = ft.Container(
+        content=create_chart(),
+        height=get_size(400, 300),
+        border=ft.border.all(1, ft.colors.GREY_400),
+        border_radius=10,
+        padding=10,
+    )
+
+    # Обработка изменения размера окна
+    def on_resize(e):
+        pressure_input.width = get_size(400, page.width * 0.9)
+        weight_input.width = get_size(400, page.width * 0.9)
+        add_button.width = get_size(400, page.width * 0.9)
+        calc_button.width = get_size(400, page.width * 0.9)
+        chart_container.height = get_size(400, 300)
+        page.update()
+
+    page.on_resize = on_resize
 
     # Добавляем все элементы на страницу
     page.add(
@@ -330,19 +374,19 @@ def main(page: ft.Page):
                     result_text,
                     ft.Divider(height=20),
                     ft.Text("График калибровочной кривой",
-                           size=20,
+                           size=get_size(20, 16),
                            weight=ft.FontWeight.BOLD),
                     chart_container,
                     ft.Divider(height=20),
                     ft.Text("Таблица калибровочных точек",
-                           size=20,
+                           size=get_size(20, 16),
                            weight=ft.FontWeight.BOLD),
                     data_table_container,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=20
+                spacing=10
             ),
-            padding=20,
+            padding=10,
             border_radius=10,
         )
     )
