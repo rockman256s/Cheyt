@@ -45,6 +45,7 @@ android.add_build_extras = true
 android.add_gradle_repositories = true
 android.add_aars = androidx.appcompat:appcompat:1.1.0
 android.allow_ndk_build = true
+android.extra_manifest_application_attributes = android:extractNativeLibs="true"
 
 [buildozer]
 log_level = 2
