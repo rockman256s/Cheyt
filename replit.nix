@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.git
     pkgs.ncurses
     pkgs.bzip2
     pkgs.libffi

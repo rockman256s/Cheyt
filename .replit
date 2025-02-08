@@ -29,10 +29,6 @@ args = "beeware_app"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "streamlit_app"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "calculator"
 
 [[workflows.workflow.tasks]]
@@ -49,7 +45,11 @@ args = "briefcase_android_build"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "setup_environment"
+args = "install_dependencies"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "streamlit_app"
 
 [[workflows.workflow]]
 name = "kivy_app"
@@ -92,21 +92,6 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python beeware_app.py"
-
-[[workflows.workflow]]
-name = "streamlit_app"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run main.py"
-waitForPort = 5000
 
 [[workflows.workflow]]
 name = "calculator"
@@ -165,7 +150,7 @@ task = "shell.exec"
 args = "yes | briefcase create android && yes | briefcase build android --update"
 
 [[workflows.workflow]]
-name = "setup_environment"
+name = "install_dependencies"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -177,6 +162,21 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python -m pip install --upgrade pip && pip install streamlit pandas numpy altair scipy scikit-learn"
+
+[[workflows.workflow]]
+name = "streamlit_app"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run main.py"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
