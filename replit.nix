@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.buildozer
     pkgs.xsimd
     pkgs.gdk-pixbuf
     pkgs.pango

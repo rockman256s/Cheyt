@@ -28,40 +28,46 @@ def main():
     # Отображение графика калибровки и таблицы данных
     points = get_all_points()
     if len(points) > 0:
+        # Отображаем таблицу данных с улучшенной видимостью
         st.header("Данные калибровки")
-
-        # Создаем DataFrame для точек калибровки
         points_df = pd.DataFrame(points, columns=['Давление', 'Вес'])
 
-        # Отображаем таблицу данных
+        # Стилизация таблицы для лучшей видимости
         st.dataframe(
-            points_df,
-            column_config={
-                "Давление": st.column_config.NumberColumn(format="%.2f"),
-                "Вес": st.column_config.NumberColumn(format="%.2f")
-            },
-            hide_index=True
+            points_df.style.format({
+                'Давление': '{:.2f}',
+                'Вес': '{:.2f}'
+            }),
+            hide_index=True,
+            height=min(len(points) * 35 + 38, 250),  # Динамическая высота таблицы
+            use_container_width=True
         )
 
+        # График калибровки
         st.header("График калибровки")
         if len(points) >= 2:
-            # Получаем точки для линии интерполяции
-            x_curve, y_curve = get_interpolation_curve(points)
+            # Получаем точки для криволинейной интерполяции
+            x_curve, y_curve = get_interpolation_curve(points, num_points=200)  # Увеличим количество точек для гладкости
 
-            # Создаем единый DataFrame для графика
-            chart_df = pd.DataFrame({
+            # Создаем DataFrame для визуализации
+            chart_data = pd.DataFrame({
                 'Давление': np.concatenate([x_curve, [p[0] for p in points]]),
                 'Вес': np.concatenate([y_curve, [p[1] for p in points]]),
-                'Тип': ['Линия'] * len(x_curve) + ['Точка'] * len(points)
+                'Тип': ['Кривая'] * len(x_curve) + ['Точка'] * len(points)
             })
 
-            # Отображаем единый график
-            st.scatter_chart(
-                data=chart_df,
+            # Настраиваем график
+            st.line_chart(
+                data=chart_data[chart_data['Тип'] == 'Кривая'],
                 x='Давление',
-                y='Вес',
-                color='Тип',
-                size='Тип'
+                y='Вес'
+            )
+
+            # Добавляем точки поверх линии
+            st.scatter_chart(
+                data=chart_data[chart_data['Тип'] == 'Точка'],
+                x='Давление',
+                y='Вес'
             )
 
             # Расчет веса
