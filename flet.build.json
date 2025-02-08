@@ -15,5 +15,16 @@
             "android.permission.WRITE_EXTERNAL_STORAGE",
             "android.permission.READ_EXTERNAL_STORAGE"
         ]
+    },
+    "flet": {
+        "views": {
+            "main": "main.py"
+        },
+        "dependencies": {
+            "flet": ">=0.26.0",
+            "flet-core": ">=0.26.0",
+            "numpy": ">=1.24.0",
+            "scipy": ">=1.10.0"
+        }
     }
 }
