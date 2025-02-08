@@ -51,46 +51,48 @@ class WeightCalculator:
 def main(page: ft.Page):
     page.title = "Прогноз веса"
     page.theme_mode = ft.ThemeMode.LIGHT
-    page.window_width = 400
-    page.window_height = 800
-    page.padding = 20
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.scroll = ft.ScrollMode.AUTO
+    page.padding = 20
     page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
 
     calc = WeightCalculator()
 
-    welcome_text = ft.Text(
-        "Добро пожаловать в приложение для прогнозирования веса!",
+    # Заголовок
+    title = ft.Text(
+        "Калькулятор веса на основе давления",
+        size=24,
+        weight=ft.FontWeight.BOLD,
+        text_align=ft.TextAlign.CENTER
+    )
+
+    description = ft.Text(
+        "Добавьте калибровочные точки (минимум 2) для расчета веса на основе давления. При "
+        "наличии двух точек используется линейная интерполяция, при большем количестве - "
+        "квадратичная.",
         size=16,
         text_align=ft.TextAlign.CENTER,
-        weight=ft.FontWeight.BOLD
     )
 
-    calibration_title = ft.Text(
-        "Калибровка",
-        size=20,
-        weight=ft.FontWeight.BOLD
-    )
-
+    # Поля ввода
     pressure_input = ft.TextField(
-        label="Введите давление:",
-        keyboard_type=ft.KeyboardType.NUMBER,
+        label="Давление",
+        width=400,
         text_align=ft.TextAlign.LEFT,
-        width=360,
-        border_radius=8
+        keyboard_type=ft.KeyboardType.NUMBER,
     )
 
     weight_input = ft.TextField(
-        label="Введите вес:",
-        keyboard_type=ft.KeyboardType.NUMBER,
+        label="Вес",
+        width=400,
         text_align=ft.TextAlign.LEFT,
-        width=360,
-        border_radius=8
+        keyboard_type=ft.KeyboardType.NUMBER,
     )
 
     result_text = ft.Text(
         size=16,
-        text_align=ft.TextAlign.CENTER
+        text_align=ft.TextAlign.CENTER,
+        color=ft.colors.BLACK
     )
 
     def add_calibration_point(e):
@@ -124,10 +126,10 @@ def main(page: ft.Page):
             result_text.color = ft.colors.RED
             page.update()
 
+    # Кнопки
     add_button = ft.ElevatedButton(
-        text="Добавить точку калибровки",
-        width=360,
-        height=40,
+        "Добавить точку калибровки",
+        width=400,
         on_click=add_calibration_point,
         style=ft.ButtonStyle(
             color=ft.colors.WHITE,
@@ -137,9 +139,8 @@ def main(page: ft.Page):
     )
 
     calc_button = ft.ElevatedButton(
-        text="Рассчитать вес",
-        width=360,
-        height=40,
+        "Рассчитать вес",
+        width=400,
         on_click=calculate_result,
         style=ft.ButtonStyle(
             color=ft.colors.WHITE,
@@ -148,17 +149,28 @@ def main(page: ft.Page):
         )
     )
 
+    # Добавляем все элементы на страницу
     page.add(
-        welcome_text,
-        ft.Divider(height=20),
-        calibration_title,
-        pressure_input,
-        weight_input,
-        add_button,
-        ft.Divider(height=20),
-        calc_button,
-        result_text
+        ft.Container(
+            content=ft.Column(
+                controls=[
+                    title,
+                    description,
+                    ft.Divider(height=20),
+                    pressure_input,
+                    weight_input,
+                    add_button,
+                    ft.Divider(height=20),
+                    calc_button,
+                    result_text
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=20
+            ),
+            padding=20,
+            border_radius=10,
+        )
     )
 
 if __name__ == '__main__':
-    ft.app(target=main, view=ft.AppView.FLET_APP_HIDDEN, assets_dir="assets")
+    ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=5000, host="0.0.0.0")
