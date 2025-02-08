@@ -1,5 +1,10 @@
 {pkgs}: {
   deps = [
+    pkgs.flutter
+    pkgs.gcc
+    pkgs.gnumake
+    pkgs.automake
+    pkgs.autoconf
     pkgs.cmake
     pkgs.libtool
     pkgs.openssl

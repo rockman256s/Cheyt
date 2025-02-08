@@ -39,6 +39,10 @@ args = "calculator"
 task = "workflow.run"
 args = "android_build"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "flutter_build"
+
 [[workflows.workflow]]
 name = "kivy_app"
 author = "agent"
@@ -123,6 +127,20 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "buildozer android debug"
+
+[[workflows.workflow]]
+name = "flutter_build"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "flutter build apk --debug"
 
 [[ports]]
 localPort = 5000
