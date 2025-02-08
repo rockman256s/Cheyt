@@ -15,10 +15,10 @@ source.dir = .
 # (str) Application versioning
 version = 1.0.0
 
-# (list) Source files to include (let empty to include all the files)
+# (list) Source files to include
 source.include_exts = py,png,jpg,kv,atlas,db,sqlite3
 
-# (list) List of directory to exclude (let empty to not exclude anything)
+# (list) List of directory to exclude
 source.exclude_dirs = tests, bin, .github, __pycache__, .buildozer
 
 # (list) List of exclusions using pattern matching
@@ -41,32 +41,21 @@ fullscreen = 0
 android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
-android.sdk = 33
 android.ndk = 25b
 android.accept_sdk_license = True
-android.arch = armeabi-v7a arm64-v8a
+android.archs = armeabi-v7a arm64-v8a
 
 # (bool) If True, then skip trying to update the Android sdk
 android.skip_update = False
 
-# (bool) If True, then automatically accept SDK license
-android.accept_sdk_license = True
-
-# (str) Android entry point, default is ok for Kivy-based app
+# (str) Android entry point
 android.entrypoint = org.kivy.android.PythonActivity
 
-# (list) By default buildozer will search for a folder named "recipes" 
-# and will use those instead.
-android.p4a_dir = /home/runner/.local/share/python-for-android
-
-# (str) The Android app theme, default is ok for Kivy-based app
+# (str) Android app theme
 android.apptheme = @android:style/Theme.NoTitleBar
 
-# (str) Android logcat filters to use
+# (str) Android logcat filters
 android.logcat_filters = *:S python:D
-
-# (str) Android additional adb arguments
-android.adb_args = -H host.docker.internal
 
 [buildozer]
 # (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
@@ -75,8 +64,8 @@ log_level = 2
 # (int) Display warning if buildozer is run as root (0 = False, 1 = True)
 warn_on_root = 0
 
-# (str) Path to build artifact storage, absolute or relative to spec file
+# (str) Path to build artifact storage
 build_dir = ./.buildozer
 
-# (str) Path to build output (i.e. .apk, .aab, .ipa) storage
+# (str) Path to build output
 bin_dir = ./bin

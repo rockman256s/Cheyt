@@ -9,6 +9,14 @@ dependencies = [
     "toga-core>=0.4.9",
     "numpy>=2.2.2",
     "pillow>=11.1.0",
+    "plotly>=6.0.0",
+    "streamlit>=1.42.0",
+    "buildozer==1.5.0",
+    "cython==0.29.36",
+    "kivy==2.3.0",
+    "kivy-garden-graph>=0.4.0",
+    "kivymd==1.1.1",
+    "pandas>=2.2.3",
 ]
 
 [tool.briefcase]
