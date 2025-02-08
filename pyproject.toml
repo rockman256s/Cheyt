@@ -13,6 +13,9 @@ dependencies = [
     "toga-android>=0.4.9",
     "toga-core>=0.4.9",
     "pillow>=11.1.0",
+    "altair>=5.5.0",
+    "kivy>=2.3.1",
+    "twilio>=9.4.4",
 ]
 
 [project.license]
