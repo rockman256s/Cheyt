@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import altair as alt
 from database import init_db, add_calibration_point, get_all_points, clear_all_points
 from interpolation import linear_interpolation, quadratic_interpolation, get_interpolation_curve
 
@@ -46,32 +47,36 @@ def main():
             st.header("График калибровки")
             try:
                 # Получаем точки для кривой
-                x_curve, y_curve = get_interpolation_curve(points, num_points=200)
+                x_curve, y_curve = get_interpolation_curve(points, num_points=500)
 
-                # Создаем единый DataFrame для графика
-                curve_data = pd.DataFrame({
+                # Создаем DataFrame для кривой
+                curve_df = pd.DataFrame({
                     'Давление': x_curve,
-                    'Вес': y_curve,
-                    'Тип': ['Кривая'] * len(x_curve)
+                    'Вес': y_curve
                 })
 
-                points_data = pd.DataFrame({
-                    'Давление': [p[0] for p in points],
-                    'Вес': [p[1] for p in points],
-                    'Тип': ['Точка'] * len(points)
-                })
-
-                # Объединяем данные
-                plot_data = pd.concat([curve_data, points_data])
-
-                # Отображаем один график с кривой и точками
-                st.scatter_chart(
-                    data=plot_data,
-                    x='Давление',
-                    y='Вес',
-                    color='Тип',
-                    size=[0.1 if t == 'Кривая' else 1 for t in plot_data['Тип']]
+                # Создаем график с кривой
+                chart = alt.Chart(curve_df).mark_line(
+                    color='blue',
+                    strokeWidth=2
+                ).encode(
+                    x=alt.X('Давление', title='Давление'),
+                    y=alt.Y('Вес', title='Вес')
                 )
+
+                # Добавляем точки калибровки
+                points_df = pd.DataFrame(points, columns=['Давление', 'Вес'])
+                points_chart = alt.Chart(points_df).mark_circle(
+                    color='red',
+                    size=100
+                ).encode(
+                    x='Давление',
+                    y='Вес'
+                )
+
+                # Комбинируем кривую и точки
+                final_chart = (chart + points_chart).interactive()
+                st.altair_chart(final_chart, use_container_width=True)
 
                 # Расчет веса
                 st.header("Расчет веса")

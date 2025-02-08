@@ -1020,6 +1020,7 @@ name = "weight-calculator"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "altair" },
     { name = "buildozer" },
     { name = "cython" },
     { name = "kivy" },
@@ -1031,6 +1032,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "altair", specifier = ">=5.5.0" },
     { name = "buildozer", specifier = "==1.5.0" },
     { name = "cython", specifier = "==0.29.36" },
     { name = "kivy", specifier = ">=2.3.1" },
