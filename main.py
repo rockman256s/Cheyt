@@ -2,8 +2,13 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
-from database import init_db, add_calibration_point, get_all_points, clear_all_points
-from interpolation import linear_interpolation, quadratic_interpolation, get_interpolation_curve
+import sys
+from pathlib import Path
+
+# Add src directory to Python path
+sys.path.append(str(Path(__file__).parent / 'src'))
+from weight_calculator.database import init_db, add_calibration_point, get_all_points, clear_all_points
+from weight_calculator.interpolation import linear_interpolation, quadratic_interpolation, get_interpolation_curve
 
 def main():
     st.title("Калькулятор веса")
