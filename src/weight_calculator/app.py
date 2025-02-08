@@ -15,34 +15,62 @@ class WeightCalculator(toga.App):
         # Create main window
         self.main_window = toga.MainWindow(title=self.name)
 
-        # Create input fields
-        self.pressure_input = toga.TextInput(placeholder='Давление')
-        self.weight_input = toga.TextInput(placeholder='Вес')
-        self.calc_input = toga.TextInput(placeholder='Введите давление для расчета')
-        self.result_label = toga.Label('Результат: ')
+        # Create input fields with improved styling
+        self.pressure_input = toga.TextInput(
+            placeholder='Давление',
+            style=Pack(flex=1, padding=5)
+        )
+        self.weight_input = toga.TextInput(
+            placeholder='Вес',
+            style=Pack(flex=1, padding=5)
+        )
+        self.calc_input = toga.TextInput(
+            placeholder='Введите давление для расчета',
+            style=Pack(flex=1, padding=5)
+        )
+        self.result_label = toga.Label(
+            'Результат: ',
+            style=Pack(padding=5)
+        )
 
-        # Create buttons
-        add_button = toga.Button('Добавить точку', on_press=self.add_point)
-        calc_button = toga.Button('Рассчитать', on_press=self.calculate_weight)
+        # Create buttons with improved styling
+        add_button = toga.Button(
+            'Добавить точку',
+            on_press=self.add_point,
+            style=Pack(padding=5)
+        )
+        calc_button = toga.Button(
+            'Рассчитать',
+            on_press=self.calculate_weight,
+            style=Pack(padding=5)
+        )
 
-        # Create layouts
-        input_box = toga.Box(
+        # Create layouts with improved structure
+        calibration_box = toga.Box(
             children=[
+                toga.Label('Калибровка:', style=Pack(padding=(0, 5))),
                 toga.Box(
-                    children=[self.pressure_input, self.weight_input, add_button],
+                    children=[self.pressure_input, self.weight_input],
                     style=Pack(direction=ROW, padding=5)
                 ),
-                toga.Box(
-                    children=[self.calc_input, calc_button, self.result_label],
-                    style=Pack(direction=ROW, padding=5)
-                )
+                add_button
             ],
-            style=Pack(direction=COLUMN, padding=5)
+            style=Pack(direction=COLUMN, padding=10)
+        )
+
+        calculation_box = toga.Box(
+            children=[
+                toga.Label('Расчет:', style=Pack(padding=(0, 5))),
+                self.calc_input,
+                calc_button,
+                self.result_label
+            ],
+            style=Pack(direction=COLUMN, padding=10)
         )
 
         # Main container
         main_box = toga.Box(
-            children=[input_box],
+            children=[calibration_box, calculation_box],
             style=Pack(direction=COLUMN, padding=10)
         )
 

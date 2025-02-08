@@ -1,5 +1,8 @@
 {pkgs}: {
   deps = [
+    pkgs.jdk
+    pkgs.gradle
+    pkgs.android-tools
     pkgs.buildozer
     pkgs.xsimd
     pkgs.gdk-pixbuf
