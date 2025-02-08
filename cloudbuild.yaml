@@ -1,0 +1,45 @@
+steps:
+- name: 'python:3.11'
+  entrypoint: bash
+  args:
+    - '-c'
+    - |
+      # Install system dependencies
+      apt-get update && apt-get install -y \
+        python3-pip \
+        build-essential \
+        git \
+        python3-dev \
+        wget \
+        unzip
+
+      # Install Python dependencies
+      pip install --upgrade pip Cython virtualenv buildozer
+
+      # Set up Android SDK
+      ANDROID_SDK_ROOT=/workspace/android-sdk
+      mkdir -p $ANDROID_SDK_ROOT
+      cd $ANDROID_SDK_ROOT
+      wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+      unzip commandlinetools-linux-9477386_latest.zip
+
+      # Set environment variables
+      export ANDROID_HOME=/workspace/android-sdk
+      export PATH=$PATH:$ANDROID_HOME/cmdline-tools/bin
+
+      # Return to workspace and build
+      cd /workspace
+      buildozer init || true
+      buildozer -v android debug
+
+artifacts:
+  objects:
+    location: 'gs://${_BUCKET_NAME}/android-builds/'
+    paths: ['bin/*.apk']
+
+substitutions:
+  _BUCKET_NAME: weight-calculator-builds
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'N1_HIGHCPU_8'

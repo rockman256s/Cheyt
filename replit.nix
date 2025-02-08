@@ -1,0 +1,33 @@
+{pkgs}: {
+  deps = [
+    pkgs.gdk-pixbuf
+    pkgs.pango
+    pkgs.fontconfig
+    pkgs.google-cloud-sdk
+    pkgs.zlib
+    pkgs.openjpeg
+    pkgs.libxcrypt
+    pkgs.libwebp
+    pkgs.libtiff
+    pkgs.libjpeg
+    pkgs.libimagequant
+    pkgs.lcms2
+    pkgs.tk
+    pkgs.tcl
+    pkgs.qhull
+    pkgs.gtk3
+    pkgs.gobject-introspection
+    pkgs.ghostscript
+    pkgs.freetype
+    pkgs.ffmpeg-full
+    pkgs.cairo
+    pkgs.pkg-config
+    pkgs.mtdev
+    pkgs.libcxx
+    pkgs.SDL2_ttf
+    pkgs.SDL2_mixer
+    pkgs.SDL2_image
+    pkgs.SDL2
+    pkgs.glibcLocales
+  ];
+}
