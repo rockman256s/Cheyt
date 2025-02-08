@@ -12,14 +12,21 @@ class WeightCalculator:
         self.load_points()
 
     def init_db(self):
+        """Initialize database with proper schema"""
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS calibration_points
-                    (id INTEGER PRIMARY KEY AUTOINCREMENT, pressure REAL, weight REAL)''')
+        # Drop existing table if exists
+        c.execute('DROP TABLE IF EXISTS calibration_points')
+        # Create new table with proper schema
+        c.execute('''CREATE TABLE calibration_points
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                     pressure REAL NOT NULL,
+                     weight REAL NOT NULL)''')
         conn.commit()
         conn.close()
 
     def load_points(self):
+        """Load calibration points from database"""
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         c.execute("SELECT id, pressure, weight FROM calibration_points ORDER BY pressure")
@@ -28,14 +35,17 @@ class WeightCalculator:
         return self.calibration_points
 
     def add_point(self, pressure, weight):
+        """Add new calibration point"""
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
-        c.execute("INSERT INTO calibration_points (pressure, weight) VALUES (?, ?)", (pressure, weight))
+        c.execute("INSERT INTO calibration_points (pressure, weight) VALUES (?, ?)",
+                 (pressure, weight))
         conn.commit()
         conn.close()
         self.load_points()
 
     def delete_point(self, point_id):
+        """Delete calibration point by id"""
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         c.execute("DELETE FROM calibration_points WHERE id = ?", (point_id,))
@@ -44,6 +54,7 @@ class WeightCalculator:
         self.load_points()
 
     def calculate_weight(self, pressure):
+        """Calculate weight using interpolation"""
         if len(self.calibration_points) < 2:
             return None
 
@@ -123,7 +134,7 @@ def main(page: ft.Page):
                 color=ft.colors.RED,
                 stroke_width=2,
                 data_points=[
-                    ft.LineChartDataPoint(x, y) 
+                    ft.LineChartDataPoint(x, y)
                     for x, y in zip(x_interp, y_interp)
                 ],
             )
@@ -140,7 +151,7 @@ def main(page: ft.Page):
                     color=ft.colors.BLUE,
                 ),
                 data_points=[
-                    ft.LineChartDataPoint(p, w) 
+                    ft.LineChartDataPoint(p, w)
                     for p, w in zip(pressures, weights)
                 ],
             )
@@ -293,13 +304,13 @@ def main(page: ft.Page):
                     calc_button,
                     result_text,
                     ft.Divider(height=20),
-                    ft.Text("График калибровочной кривой", 
-                           size=20, 
+                    ft.Text("График калибровочной кривой",
+                           size=20,
                            weight=ft.FontWeight.BOLD),
                     chart_container,
                     ft.Divider(height=20),
-                    ft.Text("Таблица калибровочных точек", 
-                           size=20, 
+                    ft.Text("Таблица калибровочных точек",
+                           size=20,
                            weight=ft.FontWeight.BOLD),
                     data_table_container,
                 ],
