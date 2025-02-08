@@ -15,6 +15,10 @@ author = "agent"
 task = "workflow.run"
 args = "streamlit_app"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "flet_app"
+
 [[workflows.workflow]]
 name = "streamlit_app"
 author = "agent"
@@ -30,9 +34,27 @@ task = "shell.exec"
 args = "streamlit run main.py --server.port 5000 --server.address 0.0.0.0"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "flet_app"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
+
 [deployment]
 run = ["sh", "-c", "streamlit run main.py --server.port 5000 --server.address 0.0.0.0"]
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 38421
+externalPort = 3000

@@ -1,135 +1,164 @@
-import streamlit as st
-import pandas as pd
+import flet as ft
 import numpy as np
-import altair as alt
 from scipy import interpolate
+import sqlite3
+import os
 
-def get_interpolation_curve(df):
-    if len(df) >= 2:
-        # Sort points by pressure
-        df_sorted = df.sort_values('pressure')
+class WeightCalculator:
+    def __init__(self):
+        self.calibration_points = []
+        self.db_path = "calibration.db"
+        self.init_db()
+        self.load_points()
 
-        # Create interpolation function
-        if len(df) == 2:
-            # Linear interpolation for 2 points
-            f = interpolate.interp1d(df_sorted['pressure'], df_sorted['weight'], 
-                                   kind='linear', fill_value='extrapolate')
+    def init_db(self):
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS calibration_points
+                    (pressure REAL, weight REAL)''')
+        conn.commit()
+        conn.close()
+
+    def load_points(self):
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute("SELECT * FROM calibration_points ORDER BY pressure")
+        self.calibration_points = c.fetchall()
+        conn.close()
+
+    def add_point(self, pressure, weight):
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute("INSERT INTO calibration_points VALUES (?, ?)", (pressure, weight))
+        conn.commit()
+        conn.close()
+        self.load_points()
+
+    def calculate_weight(self, pressure):
+        if len(self.calibration_points) < 2:
+            return None
+
+        pressures = np.array([p[0] for p in self.calibration_points])
+        weights = np.array([p[1] for p in self.calibration_points])
+
+        if len(self.calibration_points) == 2:
+            f = interpolate.interp1d(pressures, weights, kind='linear', fill_value='extrapolate')
         else:
-            # Quadratic interpolation for 3+ points
-            f = interpolate.interp1d(df_sorted['pressure'], df_sorted['weight'], 
-                                   kind='quadratic', fill_value='extrapolate')
+            f = interpolate.interp1d(pressures, weights, kind='quadratic', fill_value='extrapolate')
 
-        # Generate points for smooth curve
-        x_new = np.linspace(df_sorted['pressure'].min(), df_sorted['pressure'].max(), 100)
-        y_new = f(x_new)
+        return float(f(pressure))
 
-        return pd.DataFrame({'pressure': x_new, 'weight': y_new})
-    return pd.DataFrame(columns=['pressure', 'weight'])
+def main(page: ft.Page):
+    page.title = "Прогноз веса"
+    page.theme_mode = ft.ThemeMode.LIGHT
+    page.window_width = 400
+    page.window_height = 800
+    page.padding = 20
+    page.scroll = ft.ScrollMode.AUTO
+    page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
 
-def main():
-    st.set_page_config(page_title="Калькулятор веса", layout="centered")
+    calc = WeightCalculator()
 
-    # Основной заголовок
-    st.title("Калькулятор веса на основе давления")
+    welcome_text = ft.Text(
+        "Добро пожаловать в приложение для прогнозирования веса!",
+        size=16,
+        text_align=ft.TextAlign.CENTER,
+        weight=ft.FontWeight.BOLD
+    )
 
-    # Описание функциональности
-    st.write("Добавьте калибровочные точки (минимум 2) для расчета веса на основе давления. При "
-             "наличии двух точек используется линейная интерполяция, при большем количестве - "
-             "квадратичная.")
+    calibration_title = ft.Text(
+        "Калибровка",
+        size=20,
+        weight=ft.FontWeight.BOLD
+    )
 
-    # Initialize session state for storing calibration points
-    if 'calibration_points' not in st.session_state:
-        st.session_state.calibration_points = pd.DataFrame(columns=['pressure', 'weight'])
+    pressure_input = ft.TextField(
+        label="Введите давление:",
+        keyboard_type=ft.KeyboardType.NUMBER,
+        text_align=ft.TextAlign.LEFT,
+        width=360,
+        border_radius=8
+    )
 
-    # Calibration section
-    st.header("Калибровочные данные")
+    weight_input = ft.TextField(
+        label="Введите вес:",
+        keyboard_type=ft.KeyboardType.NUMBER,
+        text_align=ft.TextAlign.LEFT,
+        width=360,
+        border_radius=8
+    )
 
-    # Create a form for calibration inputs
-    with st.form("calibration_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            pressure = st.number_input("Давление:", 
-                                     min_value=0.0, 
-                                     step=0.1,
-                                     format="%.2f")
-        with col2:
-            weight = st.number_input("Вес:", 
-                                   min_value=0.0,
-                                   step=0.1,
-                                   format="%.2f")
+    result_text = ft.Text(
+        size=16,
+        text_align=ft.TextAlign.CENTER
+    )
 
-        submitted = st.form_submit_button("Добавить точку калибровки")
+    def add_calibration_point(e):
+        try:
+            pressure = float(pressure_input.value)
+            weight = float(weight_input.value)
+            calc.add_point(pressure, weight)
+            result_text.value = "✅ Точка калибровки добавлена"
+            result_text.color = ft.colors.GREEN
+            pressure_input.value = ""
+            weight_input.value = ""
+            page.update()
+        except ValueError:
+            result_text.value = "❌ Ошибка: введите числовые значения"
+            result_text.color = ft.colors.RED
+            page.update()
 
-        if submitted:
-            new_point = pd.DataFrame({'pressure': [pressure], 'weight': [weight]})
-            st.session_state.calibration_points = pd.concat(
-                [st.session_state.calibration_points, new_point], 
-                ignore_index=True
-            )
-            st.success("✅ Точка калибровки добавлена")
+    def calculate_result(e):
+        try:
+            pressure = float(pressure_input.value)
+            result = calc.calculate_weight(pressure)
+            if result is not None:
+                result_text.value = f"Расчетный вес: {result:.2f}"
+                result_text.color = ft.colors.BLACK
+            else:
+                result_text.value = "Необходимо минимум 2 точки калибровки"
+                result_text.color = ft.colors.RED
+            page.update()
+        except ValueError:
+            result_text.value = "❌ Ошибка: введите числовое значение давления"
+            result_text.color = ft.colors.RED
+            page.update()
 
-    # Display calibration points and graph
-    if not st.session_state.calibration_points.empty:
-        st.subheader("График калибровочной кривой")
-
-        # Create base scatter plot for calibration points
-        points_chart = alt.Chart(st.session_state.calibration_points).mark_circle(
-            size=100,
-            color='#1f77b4'
-        ).encode(
-            x=alt.X('pressure:Q', title='Давление'),
-            y=alt.Y('weight:Q', title='Вес'),
-            tooltip=['pressure:Q', 'weight:Q']
-        ).properties(
-            width=600,
-            height=400
+    add_button = ft.ElevatedButton(
+        text="Добавить точку калибровки",
+        width=360,
+        height=40,
+        on_click=add_calibration_point,
+        style=ft.ButtonStyle(
+            color=ft.colors.WHITE,
+            bgcolor=ft.colors.BLUE,
+            shape=ft.RoundedRectangleBorder(radius=8),
         )
+    )
 
-        # Add interpolation curve if we have enough points
-        if len(st.session_state.calibration_points) >= 2:
-            curve_data = get_interpolation_curve(st.session_state.calibration_points)
-            curve_chart = alt.Chart(curve_data).mark_line(
-                color='red'
-            ).encode(
-                x='pressure:Q',
-                y='weight:Q'
-            )
-            # Combine points and curve
-            chart = (points_chart + curve_chart)
-        else:
-            chart = points_chart
-
-        st.altair_chart(chart, use_container_width=True)
-
-        # Display calibration points in a table
-        st.subheader("Текущие точки калибровки")
-        st.dataframe(
-            st.session_state.calibration_points.style.format({
-                'pressure': '{:.2f}',
-                'weight': '{:.2f}'
-            })
+    calc_button = ft.ElevatedButton(
+        text="Рассчитать вес",
+        width=360,
+        height=40,
+        on_click=calculate_result,
+        style=ft.ButtonStyle(
+            color=ft.colors.WHITE,
+            bgcolor=ft.colors.GREEN,
+            shape=ft.RoundedRectangleBorder(radius=8),
         )
+    )
 
-        # Add calculation section if we have enough points
-        if len(st.session_state.calibration_points) >= 2:
-            st.header("Расчет веса")
-            pressure_to_calc = st.number_input(
-                "Введите давление для расчета:",
-                min_value=0.0,
-                step=0.1,
-                format="%.2f"
-            )
+    page.add(
+        welcome_text,
+        ft.Divider(height=20),
+        calibration_title,
+        pressure_input,
+        weight_input,
+        add_button,
+        ft.Divider(height=20),
+        calc_button,
+        result_text
+    )
 
-            if st.button("Рассчитать вес"):
-                curve_data = get_interpolation_curve(st.session_state.calibration_points)
-                f = interpolate.interp1d(
-                    curve_data['pressure'],
-                    curve_data['weight'],
-                    kind='linear',
-                    fill_value='extrapolate'
-                )
-                calculated_weight = float(f(pressure_to_calc))
-                st.success(f"Расчетный вес: {calculated_weight:.2f}")
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    ft.app(target=main, view=ft.AppView.FLET_APP_HIDDEN, assets_dir="assets")

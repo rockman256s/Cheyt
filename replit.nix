@@ -1,5 +1,7 @@
 {pkgs}: {
   deps = [
+    pkgs.libpng
+    pkgs.gtk3
     pkgs.libffi
     pkgs.ncurses
     pkgs.xz

@@ -1,28 +1,37 @@
 #!/bin/bash
 
-# Set environment variables
-export PATH=$PATH:$HOME/.local/bin
-export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-export PYTHONPATH=$PYTHONPATH:$HOME/.local/lib/python3.11/site-packages
-export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
-export ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-ndk
+echo "Starting APK build process..."
 
-# Clean previous build
+# Проверка наличия необходимых инструментов
+if ! command -v python3 &> /dev/null; then
+    echo "Python3 not found. Please install Python 3.11"
+    exit 1
+fi
+
+# Установка зависимостей
+echo "Installing dependencies..."
+pip install buildozer==1.5.0 Cython==0.29.36
+
+# Очистка предыдущей сборки
+echo "Cleaning previous build..."
 rm -rf .buildozer
 rm -rf bin
 
-# Install build dependencies
-pip install --upgrade pip
-pip install buildozer==1.5.0 Cython==0.29.36
+# Проверка наличия buildozer.spec
+if [ ! -f "buildozer.spec" ]; then
+    echo "buildozer.spec not found. Creating default configuration..."
+    buildozer init
+fi
 
-# Run build with detailed logging
-buildozer android debug -v
+# Сборка APK
+echo "Building APK..."
+buildozer android debug
 
-# Check result
+# Проверка результата
 if [ -f "bin/weightcalculator-1.0.0.3-arm64-v8a-debug.apk" ]; then
-    echo "APK successfully built!"
+    echo "APK built successfully!"
     echo "APK location: bin/weightcalculator-1.0.0.3-arm64-v8a-debug.apk"
 else
-    echo "Build failed. Check the logs for details."
+    echo "Build failed. Check logs for details."
     exit 1
 fi

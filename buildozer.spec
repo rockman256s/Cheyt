@@ -3,15 +3,16 @@ title = Weight Calculator
 package.name = weightcalculator
 package.domain = org.weightcalc
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,db
+source.include_exts = py,png,jpg,kv,atlas,db,toml
+source.exclude_dirs = tests, bin, venv, .git
 version = 1.0.0.3
 
 requirements = python3,\
-    kivy==2.3.1,\
-    pillow,\
-    numpy,\
-    scipy,\
-    sqlite3
+    flet==0.19.0,\
+    flet-core==0.19.0,\
+    numpy==1.26.0,\
+    scipy==1.11.3,\
+    pillow>=10.0.1
 
 # Android specific
 android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
@@ -19,9 +20,9 @@ android.api = 33
 android.minapi = 21
 android.ndk = 25b
 android.archs = arm64-v8a
+android.allow_backup = True
 
 # Build options
-android.allow_backup = True
 android.logcat_filters = *:S python:D
 android.copy_libs = 1
 
