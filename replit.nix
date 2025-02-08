@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.xsimd
     pkgs.gdk-pixbuf
     pkgs.pango
     pkgs.fontconfig
