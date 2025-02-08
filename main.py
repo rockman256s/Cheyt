@@ -48,18 +48,30 @@ def main():
                 # Получаем точки для кривой
                 x_curve, y_curve = get_interpolation_curve(points, num_points=200)
 
-                # Создаем DataFrame для кривой
-                curve_df = pd.DataFrame({
+                # Создаем единый DataFrame для графика
+                curve_data = pd.DataFrame({
                     'Давление': x_curve,
-                    'Вес': y_curve
+                    'Вес': y_curve,
+                    'Тип': ['Кривая'] * len(x_curve)
                 })
 
-                # Отображаем кривую
-                st.line_chart(curve_df, x='Давление', y='Вес')
+                points_data = pd.DataFrame({
+                    'Давление': [p[0] for p in points],
+                    'Вес': [p[1] for p in points],
+                    'Тип': ['Точка'] * len(points)
+                })
 
-                # Отображаем точки калибровки
-                points_df = pd.DataFrame(points, columns=['Давление', 'Вес'])
-                st.scatter_chart(points_df, x='Давление', y='Вес')
+                # Объединяем данные
+                plot_data = pd.concat([curve_data, points_data])
+
+                # Отображаем один график с кривой и точками
+                st.scatter_chart(
+                    data=plot_data,
+                    x='Давление',
+                    y='Вес',
+                    color='Тип',
+                    size=[0.1 if t == 'Кривая' else 1 for t in plot_data['Тип']]
+                )
 
                 # Расчет веса
                 st.header("Расчет веса")
