@@ -8,7 +8,6 @@ source.include_patterns = main_android.py
 source.exclude_dirs = tests,bin,venv,.git,__pycache__,.buildozer,android,lib,.pytest_cache,.github
 version = 1.0.0.4
 
-# Обновляем требования для более стабильной сборки
 requirements = python3,\
     kivy==2.3.1,\
     pillow,\
@@ -37,7 +36,7 @@ android.copy_libs = 1
 android.enable_androidx = True
 android.gradle_dependencies = androidx.core:core:1.6.0
 p4a.hook = gradle
-p4a.branch = master
+p4a.branch = develop
 p4a.bootstrap = sdl2
 
 # Дополнительные параметры сборки
@@ -46,6 +45,7 @@ android.add_gradle_repositories = true
 android.add_aars = androidx.appcompat:appcompat:1.1.0
 android.allow_ndk_build = true
 android.extra_manifest_application_attributes = android:extractNativeLibs="true"
+android.add_src = crystax_python
 
 [buildozer]
 log_level = 2

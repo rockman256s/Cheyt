@@ -64,7 +64,9 @@ jobs:
             automake \
             libtool \
             pkg-config \
-            cmake
+            cmake \
+            libffi-dev \
+            libssl-dev
 
       - name: Ensure .buildozer directory
         run: mkdir -p .buildozer
@@ -79,9 +81,11 @@ jobs:
           export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
           export PATH=$PATH:$ANDROID_HOME/platform-tools
           export PATH=$PATH:$ANDROID_NDK_HOME
+          export LDFLAGS="-L/usr/local/opt/libffi/lib"
+          export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
 
       - name: Accept Android licenses
-        run: yes | sudo ~/Android/Sdk/tools/bin/sdkmanager --licenses || true
+        run: yes | sdkmanager --licenses || true
 
       - name: Build with Buildozer
         run: |
