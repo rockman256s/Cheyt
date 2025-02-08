@@ -1,6 +1,6 @@
 [project]
 name = "weight-calculator"
-version = "1.0.0.5"
+version = "1.0.0.1"
 description = "Weight calculator application using pressure-based interpolation"
 requires-python = ">=3.11"
 dependencies = [
@@ -25,7 +25,7 @@ text = "BSD"
 [tool.briefcase]
 project_name = "Weight Calculator"
 bundle = "org.weightcalc"
-version = "1.0.0.5"
+version = "1.0.0.1"
 url = "https://github.com/rockman256s/Cheyt.git"
 author = "rockman256s"
 author_email = "rockman256s@github.com"
