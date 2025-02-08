@@ -26,9 +26,8 @@ source.exclude_patterns = license,images/*/*.jpg,.gitignore,README.md,.gcloudign
 
 # (str) Application requirements
 requirements = python3==3.11,\
-    toga==0.4.9,\
-    toga-core==0.4.9,\
-    briefcase>=0.3.22,\
+    kivy==2.3.0,\
+    kivymd==1.1.1,\
     pillow,\
     numpy,\
     sqlite3
@@ -55,10 +54,16 @@ android.skip_update = False
 android.accept_sdk_license = True
 
 # (str) Android entry point, default is ok for Kivy-based app
-android.entrypoint = org.beeware.android.MainActivity
+android.entrypoint = org.kivy.android.PythonActivity
+
+# (str) The Android app theme, default is ok for Kivy-based app
+android.apptheme = @android:style/Theme.NoTitleBar
 
 # (str) Android logcat filters to use
 android.logcat_filters = *:S python:D
+
+# (str) Android additional adb arguments
+android.adb_args = -H host.docker.internal
 
 [buildozer]
 # (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
