@@ -1,4 +1,4 @@
-python3==3.9.18
+python3==3.8.0
 kivy==2.2.1
 pillow==9.5.0
 plyer==2.1.0
