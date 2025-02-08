@@ -1,5 +1,8 @@
 {pkgs}: {
   deps = [
+    pkgs.cmake
+    pkgs.libtool
+    pkgs.openssl
     pkgs.jdk
     pkgs.gradle
     pkgs.android-tools

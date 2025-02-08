@@ -35,6 +35,10 @@ args = "streamlit_app"
 task = "workflow.run"
 args = "calculator"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "android_build"
+
 [[workflows.workflow]]
 name = "kivy_app"
 author = "agent"
@@ -105,6 +109,20 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python main.py"
+
+[[workflows.workflow]]
+name = "android_build"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "buildozer android debug"
 
 [[ports]]
 localPort = 5000

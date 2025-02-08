@@ -29,7 +29,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install buildozer==1.5.0
           pip install cython==0.29.36
-          pip install -r requirements.txt
+          pip install kivy==2.3.1
 
       - name: Install system dependencies
         run: |
@@ -54,22 +54,19 @@ jobs:
             gstreamer1.0-plugins-base \
             gstreamer1.0-plugins-good \
             cmake \
-            ninja-build \
             libffi-dev \
-            libssl-dev
-
-      - name: Create requirements.txt
-        run: |
-          echo "buildozer==1.5.0" > requirements.txt
-          echo "cython==0.29.36" >> requirements.txt
-          echo "kivy==2.3.1" >> requirements.txt
-          echo "pillow" >> requirements.txt
+            libssl-dev \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config
 
       - name: Accept Android licenses
         run: yes | sudo ~/Android/Sdk/tools/bin/sdkmanager --licenses || true
 
       - name: Build Android APK
         run: |
+          buildozer init
           buildozer android debug
 
       - name: Upload APK
