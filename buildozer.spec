@@ -8,11 +8,7 @@ source.include_patterns = main_android.py
 source.exclude_dirs = tests,bin,venv,.git,__pycache__,.buildozer,android,lib,.pytest_cache,.github
 version = 1.0.0.4
 
-requirements = python3,\
-    kivy==2.3.1,\
-    pillow,\
-    plyer,\
-    android
+requirements = python3,kivy==2.2.1,pillow==9.5.0,plyer==2.1.0
 
 # Android specific
 orientation = portrait
@@ -32,21 +28,11 @@ android.debug = True
 android.logcat_filters = *:S python:D
 android.copy_libs = 1
 
-# Оптимизация сборки
+# Build optimization
 android.enable_androidx = True
 android.gradle_dependencies = androidx.core:core:1.6.0
 p4a.hook = gradle
-p4a.branch = develop
-p4a.bootstrap = sdl2
-
-# Дополнительные параметры сборки
-android.add_build_extras = true
-android.add_gradle_repositories = true
-android.add_aars = androidx.appcompat:appcompat:1.1.0
-android.allow_ndk_build = true
-android.extra_manifest_application_attributes = android:extractNativeLibs="true"
-android.add_src = crystax_python
-android.extra_manifest_xml = <?xml version="1.0" encoding="utf-8"?><manifest></manifest>
+p4a.branch = master
 
 [buildozer]
 log_level = 2
