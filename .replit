@@ -47,6 +47,10 @@ args = "flutter_build"
 task = "workflow.run"
 args = "briefcase_android_build"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "setup_environment"
+
 [[workflows.workflow]]
 name = "kivy_app"
 author = "agent"
@@ -159,6 +163,20 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "yes | briefcase create android && yes | briefcase build android --update"
+
+[[workflows.workflow]]
+name = "setup_environment"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -m pip install --upgrade pip && pip install streamlit pandas numpy altair scipy scikit-learn"
 
 [[ports]]
 localPort = 5000
