@@ -6,9 +6,16 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,db,json
 source.include_patterns = main_android.py
 source.exclude_dirs = tests,bin,venv,.git,__pycache__,.buildozer,android,lib,.pytest_cache,.github
-version = 1.0.0.3
+version = 1.0.0.4
 
-requirements = python3,kivy==2.3.1,pillow,numpy,sqlite3,plyer
+# Обновляем требования для более стабильной сборки
+requirements = python3,\
+    kivy==2.3.1,\
+    pillow,\
+    numpy,\
+    sqlite3,\
+    plyer,\
+    android
 
 # Android specific
 orientation = portrait
@@ -26,6 +33,7 @@ android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 android.release_artifact = apk
 android.debug = True
 android.logcat_filters = *:S python:D
+android.copy_libs = 1
 
 [buildozer]
 log_level = 2

@@ -1,3 +1,6 @@
+"""
+Weight Calculator Android Application
+"""
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -5,13 +8,23 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.metrics import dp
 from kivy.core.window import Window
+from kivy.utils import platform
 import sqlite3
 import os
 
 class WeightCalculatorApp(App):
     def build(self):
-        # Set window size for testing
-        Window.size = (400, 600)
+        # Настройка окна для Android
+        if platform == 'android':
+            from android.permissions import request_permissions, Permission
+            request_permissions([
+                Permission.WRITE_EXTERNAL_STORAGE,
+                Permission.READ_EXTERNAL_STORAGE
+            ])
+
+        # Set window size for testing (только для десктопа)
+        if platform != 'android':
+            Window.size = (400, 600)
 
         # Create main layout
         layout = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
@@ -49,7 +62,6 @@ class WeightCalculatorApp(App):
         cal_layout.add_widget(self.weight_input)
         cal_layout.add_widget(add_button)
 
-
         # Weight calculation
         calc_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(120))
         self.calc_input = TextInput(
@@ -80,13 +92,21 @@ class WeightCalculatorApp(App):
 
         return layout
 
+    def get_application_path(self):
+        """Get path for database file based on platform"""
+        if platform == 'android':
+            from android.storage import app_storage_path
+            return app_storage_path()
+        return os.path.dirname(os.path.abspath(__file__))
+
     def add_point(self, instance):
         try:
             pressure = float(self.pressure_input.text)
             weight = float(self.weight_input.text)
 
-            # Store in SQLite database
-            conn = sqlite3.connect('calibration.db')
+            # Store in SQLite database with platform-specific path
+            db_path = os.path.join(self.get_application_path(), 'calibration.db')
+            conn = sqlite3.connect(db_path)
             c = conn.cursor()
 
             # Create table if not exists
@@ -103,15 +123,18 @@ class WeightCalculatorApp(App):
             self.result_label.text = 'Точка добавлена'
         except ValueError:
             self.result_label.text = 'Ошибка: введите числовые значения'
-        except sqlite3.Error:
-            self.result_label.text = 'Ошибка базы данных'
+        except sqlite3.Error as e:
+            self.result_label.text = f'Ошибка базы данных: {str(e)}'
+        except Exception as e:
+            self.result_label.text = f'Ошибка: {str(e)}'
 
     def calculate_weight(self, instance):
         try:
             pressure = float(self.calc_input.text)
 
             # Get calibration points from database
-            conn = sqlite3.connect('calibration.db')
+            db_path = os.path.join(self.get_application_path(), 'calibration.db')
+            conn = sqlite3.connect(db_path)
             c = conn.cursor()
             c.execute("SELECT * FROM calibration_points ORDER BY pressure")
             points = c.fetchall()
@@ -134,16 +157,13 @@ class WeightCalculatorApp(App):
 
         except ValueError:
             self.result_label.text = 'Ошибка: введите числовое значение'
-        except sqlite3.Error:
-            self.result_label.text = 'Ошибка базы данных'
+        except sqlite3.Error as e:
+            self.result_label.text = f'Ошибка базы данных: {str(e)}'
+        except Exception as e:
+            self.result_label.text = f'Ошибка: {str(e)}'
 
 if __name__ == '__main__':
-    if not os.path.exists('calibration.db'):
-        conn = sqlite3.connect('calibration.db')
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS calibration_points
-                    (pressure REAL, weight REAL)''')
-        conn.commit()
-        conn.close()
-
-    WeightCalculatorApp().run()
+    try:
+        WeightCalculatorApp().run()
+    except Exception as e:
+        print(f"Critical error: {str(e)}")
