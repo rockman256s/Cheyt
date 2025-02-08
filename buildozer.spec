@@ -4,10 +4,10 @@ package.name = weightcalculator
 package.domain = org.weightcalc
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
-source.exclude_dirs = tests,bin,venv,.git,__pycache__,.buildozer
+source.exclude_dirs = tests,bin,venv,.git,__pycache__,.buildozer,android,lib,.pytest_cache
 version = 1.0.0.1
 
-requirements = python3,kivy==2.2.1
+requirements = python3,kivy==2.3.1,numpy,pandas,sqlite3
 
 orientation = portrait
 fullscreen = 0
@@ -24,7 +24,7 @@ android.allow_backup = True
 p4a.branch = master
 p4a.bootstrap = sdl2
 
-# Set Python version explicitly to 3.10
+# Set Python version explicitly
 android.python_version = 3.10
 
 [buildozer]
