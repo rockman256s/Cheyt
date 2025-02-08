@@ -123,7 +123,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "rm -rf .buildozer && buildozer -v android debug"
+args = "buildozer -v android debug"
 
 [[workflows.workflow]]
 name = "flutter_build"

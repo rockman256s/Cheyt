@@ -18,7 +18,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
         cache: 'pip'
 
     - name: Install system dependencies
@@ -72,6 +72,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade Cython==0.29.33
         pip install --upgrade buildozer==1.4.0
+        pip install -r requirements.txt
         pip install kivy==2.2.1
 
     - name: Configure buildozer
