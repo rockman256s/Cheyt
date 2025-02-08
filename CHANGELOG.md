@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0.5] - 2025-02-08
+### Fixed
+- Fixed Python version compatibility issues
+- Updated libffi build configuration
+- Improved Android build process
+- Updated build dependencies
+- Fixed autoconf issues with libffi
+- Optimized cache configuration for builds
+
+### Changed
+- Switched to Python 3.9 for better compatibility
+- Updated buildozer configuration
+- Improved build script stability
+
 ## [1.0.0.4] - 2025-02-08
 ### Fixed
 - Исправлены проблемы сборки Android APK

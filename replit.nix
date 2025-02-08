@@ -1,5 +1,7 @@
 {pkgs}: {
   deps = [
+    pkgs.ncurses
+    pkgs.bzip2
     pkgs.libffi
     pkgs.pkgconfig
     pkgs.binutils
