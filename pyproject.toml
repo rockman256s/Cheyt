@@ -1,6 +1,6 @@
 [project]
 name = "weight-calculator"
-version = "0.1.0"
+version = "1.0.0.1"
 description = "Weight calculator application using pressure-based interpolation"
 requires-python = ">=3.11"
 dependencies = [
@@ -12,7 +12,33 @@ dependencies = [
     "kivy>=2.3.1",
     "cython==0.29.36",
     "altair>=5.5.0",
+    "briefcase>=0.3.17",
+    "toga>=0.4.0",
+    "toga-android>=0.4.9",
+    "toga-core>=0.4.9",
 ]
+
+[project.license]
+text = "BSD"
+
+[tool.briefcase]
+project_name = "Weight Calculator"
+bundle = "org.weightcalc"
+version = "1.0.0.1"
+url = "https://github.com/username/weight-calculator"
+author = "Your Name"
+author_email = "your.email@example.com"
+
+[tool.briefcase.app.weight_calculator]
+formal_name = "Weight Calculator"
+description = "Weight calculator application using pressure-based interpolation"
+icon = "src/weight_calculator/resources/weight_calculator"
+sources = ["src/weight_calculator"]
+test_sources = ["tests"]
+
+[tool.briefcase.app.weight_calculator.android]
+requires = []
+base_requirements = ["toga-android>=0.4.0"]
 
 [build-system]
 requires = ["setuptools>=42", "wheel"]
