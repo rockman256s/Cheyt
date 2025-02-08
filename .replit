@@ -1,4 +1,4 @@
-modules = ["python-3.11", "flutter"]
+modules = ["python-3.11", "flutter", "nodejs-20"]
 
 [nix]
 channel = "stable-24_05"
@@ -126,7 +126,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "buildozer android debug"
+args = "buildozer -v android debug"
 
 [[workflows.workflow]]
 name = "flutter_build"
@@ -140,7 +140,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "flutter config --android-sdk /home/runner/android-sdk && flutter build apk --debug"
+args = "flutter config --android-sdk $ANDROID_SDK_ROOT && flutter build apk --debug"
 
 [[ports]]
 localPort = 5000
