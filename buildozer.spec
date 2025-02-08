@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,db,json
 source.include_patterns = main_android.py
 source.exclude_dirs = tests,bin,venv,.git,__pycache__,.buildozer,android,lib,.pytest_cache,.github
-version = 1.0.0.2
+version = 1.0.0.3
 
 requirements = python3,kivy==2.3.1,pillow,numpy,sqlite3,plyer
 
