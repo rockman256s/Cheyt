@@ -42,6 +42,15 @@ wheels = [
 ]
 
 [[package]]
+name = "appdirs"
+version = "1.4.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d7/d8/05696357e0311f5b5c316d7b95f46c669dd9c15aaeecbb48c7d0aeb88c40/appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41", size = 13470 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/00/2344469e2084fb287c2e0b57b72910309874c3245463acd6cf5e3db69324/appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128", size = 9566 },
+]
+
+[[package]]
 name = "arrow"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -821,6 +830,15 @@ wheels = [
 ]
 
 [[package]]
+name = "plyer"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/85/f61425aa9be1f9108eec1c13861c1e11c9a04eb786eb4832a8f7188317df/plyer-2.1.0.tar.gz", hash = "sha256:65b7dfb7e11e07af37a8487eb2aa69524276ef70dad500b07228ce64736baa61", size = 121371 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d3/89/a41c2643fc8eabeb84791acb9d0e4d139b1e4b53473cc4dae947b5fa33ed/plyer-2.1.0-py2.py3-none-any.whl", hash = "sha256:1b1772060df8b3045ed4f08231690ec8f7de30f5a004aa1724665a9074eed113", size = 142266 },
+]
+
+[[package]]
 name = "protobuf"
 version = "5.29.3"
 source = { registry = "https://pypi.org/simple" }
@@ -978,6 +996,25 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892 },
+]
+
+[[package]]
+name = "python-for-android"
+version = "2024.1.21"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "appdirs" },
+    { name = "build" },
+    { name = "colorama" },
+    { name = "jinja2" },
+    { name = "packaging" },
+    { name = "setuptools" },
+    { name = "sh", marker = "sys_platform != 'win32'" },
+    { name = "toml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7e/08/b917166a08b3a395acaed43908c700f5b1dcb61166a0f3db09a29a000b9e/python-for-android-2024.1.21.tar.gz", hash = "sha256:f4f2854e4a31649cfbc4c17d6da475a59b0e7506fa1925151b4865b0d28fd497", size = 484770 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/9a/d7aaddc380894c51484669ca4ac9c5ab890fcda0ef91ed4ad73eadb881a2/python_for_android-2024.1.21-py3-none-any.whl", hash = "sha256:846296e53ae0cd004b0b7b1a296fb3d9bc3469de7bf43e7454f7bded28d7ce26", size = 543440 },
 ]
 
 [[package]]
@@ -1228,12 +1265,9 @@ wheels = [
 
 [[package]]
 name = "sh"
-version = "2.2.1"
+version = "1.14.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/bd/30/abf254f7b56ba7bcae938767e3ee0f54d220d931a35a8721de350b76dec5/sh-2.2.1.tar.gz", hash = "sha256:287021ae84183dea49787985e33797dda7fe769e4f95f2c94dff8e245ab4cb00", size = 345105 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3d/9a/3fb455591ab32280ea9397e8cb02b167bf591428e89779a896f2998cfd56/sh-2.2.1-py3-none-any.whl", hash = "sha256:c7369c4ae13729d8ea100b5e93af1a8be528a008433428e38651c9f2b5b5fe2c", size = 38147 },
-]
+sdist = { url = "https://files.pythonhosted.org/packages/b7/09/89c28aaf2a49f226fef8587c90c6386bd2cc03a0295bc4ff7fc6ee43c01d/sh-1.14.3.tar.gz", hash = "sha256:e4045b6c732d9ce75d571c79f5ac2234edd9ae4f5fa9d59b09705082bdca18c7", size = 62851 }
 
 [[package]]
 name = "six"
@@ -1542,6 +1576,9 @@ dependencies = [
     { name = "kivy" },
     { name = "numpy" },
     { name = "pandas" },
+    { name = "pillow" },
+    { name = "plyer" },
+    { name = "python-for-android" },
     { name = "scipy" },
     { name = "streamlit" },
     { name = "toga" },
@@ -1555,9 +1592,12 @@ requires-dist = [
     { name = "briefcase", specifier = ">=0.3.17" },
     { name = "buildozer", specifier = "==1.5.0" },
     { name = "cython", specifier = "==0.29.36" },
-    { name = "kivy", specifier = ">=2.3.1" },
+    { name = "kivy", specifier = "==2.3.1" },
     { name = "numpy", specifier = ">=2.2.2" },
     { name = "pandas", specifier = ">=2.2.3" },
+    { name = "pillow", specifier = ">=11.1.0" },
+    { name = "plyer", specifier = ">=2.1.0" },
+    { name = "python-for-android", specifier = ">=2024.1.21" },
     { name = "scipy", specifier = ">=1.12.0" },
     { name = "streamlit", specifier = ">=1.42.0" },
     { name = "toga", specifier = ">=0.4.0" },

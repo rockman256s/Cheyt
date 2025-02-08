@@ -1,4 +1,4 @@
-modules = ["python-3.11", "flutter", "nodejs-20"]
+modules = ["python-3.11", "flutter", "nodejs-20", "python3"]
 
 [nix]
 channel = "stable-24_05"
@@ -126,7 +126,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "buildozer -v android debug"
+args = "rm -rf .buildozer && buildozer -v android debug"
 
 [[workflows.workflow]]
 name = "flutter_build"

@@ -1,5 +1,9 @@
 {pkgs}: {
   deps = [
+    pkgs.openjdk11_headless
+    pkgs.gperf
+    pkgs.flex
+    pkgs.bison
     pkgs.glibc
     pkgs.flutter
     pkgs.gcc

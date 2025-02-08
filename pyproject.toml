@@ -9,13 +9,16 @@ dependencies = [
     "streamlit>=1.42.0",
     "scipy>=1.12.0",
     "buildozer==1.5.0",
-    "kivy>=2.3.1",
+    "kivy==2.3.1",
     "cython==0.29.36",
     "altair>=5.5.0",
     "briefcase>=0.3.17",
     "toga>=0.4.0",
     "toga-android>=0.4.9",
     "toga-core>=0.4.9",
+    "pillow>=11.1.0",
+    "python-for-android>=2024.1.21",
+    "plyer>=2.1.0",
 ]
 
 [project.license]
