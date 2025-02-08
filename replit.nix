@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.glibc
     pkgs.flutter
     pkgs.gcc
     pkgs.gnumake
