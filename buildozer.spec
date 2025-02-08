@@ -37,7 +37,14 @@ android.copy_libs = 1
 android.enable_androidx = True
 android.gradle_dependencies = androidx.core:core:1.6.0
 p4a.hook = gradle
-p4a.branch = develop
+p4a.branch = master
+p4a.bootstrap = sdl2
+
+# Дополнительные параметры сборки
+android.add_build_extras = true
+android.add_gradle_repositories = true
+android.add_aars = androidx.appcompat:appcompat:1.1.0
+android.allow_ndk_build = true
 
 [buildozer]
 log_level = 2
