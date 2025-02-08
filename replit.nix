@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.binutils
     pkgs.openjdk11_headless
     pkgs.gperf
     pkgs.flex

@@ -16,6 +16,7 @@ dependencies = [
     "altair>=5.5.0",
     "kivy>=2.3.1",
     "twilio>=9.4.4",
+    "trafilatura>=2.0.0",
 ]
 
 [project.license]
