@@ -1,5 +1,7 @@
 {pkgs}: {
   deps = [
+    pkgs.libffi
+    pkgs.pkgconfig
     pkgs.binutils
     pkgs.openjdk11_headless
     pkgs.gperf
