@@ -43,6 +43,10 @@ args = "android_build"
 task = "workflow.run"
 args = "flutter_build"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "briefcase_android_build"
+
 [[workflows.workflow]]
 name = "kivy_app"
 author = "agent"
@@ -141,6 +145,20 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "flutter config --android-sdk $ANDROID_SDK_ROOT && flutter build apk --debug"
+
+[[workflows.workflow]]
+name = "briefcase_android_build"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "yes | briefcase create android && yes | briefcase build android --update"
 
 [[ports]]
 localPort = 5000

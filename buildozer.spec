@@ -5,7 +5,7 @@ package.domain = org.weightcalc
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,db,json
 source.exclude_dirs = tests,bin,venv,.git,__pycache__,.buildozer,android,lib,.pytest_cache,.github
-version = 1.0.0.1
+version = 1.0.0.2
 
 requirements = python3,kivy==2.3.1,pillow,numpy,sqlite3,plyer
 
@@ -14,10 +14,10 @@ orientation = portrait
 fullscreen = 0
 android.archs = arm64-v8a, armeabi-v7a
 android.allow_backup = True
-android.api = 31
+android.api = 33
 android.minapi = 21
-android.ndk = 23b
-android.sdk = 31
+android.ndk = 25b
+android.sdk = 33
 android.accept_sdk_license = True
 android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
