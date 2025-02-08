@@ -46,6 +46,7 @@ android.add_aars = androidx.appcompat:appcompat:1.1.0
 android.allow_ndk_build = true
 android.extra_manifest_application_attributes = android:extractNativeLibs="true"
 android.add_src = crystax_python
+android.extra_manifest_xml = <?xml version="1.0" encoding="utf-8"?><manifest></manifest>
 
 [buildozer]
 log_level = 2

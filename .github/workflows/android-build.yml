@@ -68,24 +68,24 @@ jobs:
             libffi-dev \
             libssl-dev
 
-      - name: Ensure .buildozer directory
-        run: mkdir -p .buildozer
-
-      - name: Set up Android NDK
+      - name: Set up NDK
         run: |
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
-          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+          yes | sdkmanager --licenses || true
+          sdkmanager --install "build-tools;33.0.0" "platforms;android-33" "ndk;25.2.9519653"
 
       - name: Configure environment
         run: |
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-          export PATH=$PATH:$ANDROID_HOME/platform-tools
-          export PATH=$PATH:$ANDROID_NDK_HOME
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653
+          export ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653
           export LDFLAGS="-L/usr/local/opt/libffi/lib"
           export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
+          export PYTHONPATH="${PYTHONPATH}:${GITHUB_WORKSPACE}"
 
-      - name: Accept Android licenses
-        run: yes | sdkmanager --licenses || true
+      - name: Ensure directories
+        run: |
+          mkdir -p .buildozer
+          mkdir -p $HOME/.buildozer
 
       - name: Build with Buildozer
         run: |
