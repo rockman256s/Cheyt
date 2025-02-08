@@ -25,25 +25,47 @@ def main():
         else:
             st.error("Ошибка при добавлении точки")
 
-    # Отображение графика калибровки
+    # Отображение графика калибровки и таблицы данных
     points = get_all_points()
     if len(points) > 0:
-        st.header("График калибровки")
+        st.header("Данные калибровки")
 
         # Создаем DataFrame для точек калибровки
         points_df = pd.DataFrame(points, columns=['Давление', 'Вес'])
 
+        # Отображаем таблицу данных
+        st.dataframe(
+            points_df,
+            column_config={
+                "Давление": st.column_config.NumberColumn(format="%.2f"),
+                "Вес": st.column_config.NumberColumn(format="%.2f")
+            },
+            hide_index=True
+        )
+
+        st.header("График калибровки")
         if len(points) >= 2:
             # Получаем точки для линии интерполяции
             x_curve, y_curve = get_interpolation_curve(points)
-            curve_df = pd.DataFrame({
-                'Давление': x_curve,
-                'Вес': y_curve
+
+            # Создаем DataFrame для графика
+            chart_df = pd.DataFrame({
+                'Давление': list(x_curve) + [p[0] for p in points],
+                'Вес': list(y_curve) + [p[1] for p in points],
+                'Тип': ['Линия'] * len(x_curve) + ['Точка'] * len(points)
             })
 
-            # Отображаем график с точками и линией
-            st.scatter_chart(points_df, x='Давление', y='Вес')
-            st.line_chart(curve_df, x='Давление', y='Вес')
+            # Отображаем комбинированный график
+            st.line_chart(
+                chart_df[chart_df['Тип'] == 'Линия'],
+                x='Давление',
+                y='Вес'
+            )
+            st.scatter_chart(
+                chart_df[chart_df['Тип'] == 'Точка'],
+                x='Давление',
+                y='Вес'
+            )
 
             # Расчет веса
             st.header("Расчет веса")
