@@ -42,6 +42,18 @@ env/
 venv/
 ENV/
 
+# Android
+*.keystore
+*.jks
+.gradle/
+local.properties
+*.iml
+.idea/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+
 # Credentials
 *.json
 *credentials*

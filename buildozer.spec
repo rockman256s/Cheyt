@@ -4,6 +4,7 @@ package.name = weightcalculator
 package.domain = org.weightcalc
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,db,json
+source.include_patterns = main_android.py
 source.exclude_dirs = tests,bin,venv,.git,__pycache__,.buildozer,android,lib,.pytest_cache,.github
 version = 1.0.0.2
 
@@ -21,13 +22,10 @@ android.sdk = 33
 android.accept_sdk_license = True
 android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
-# Set main.py as entry point
-source.include_patterns = main_android.py
-android.presplash_color = #FFFFFF
-
 # Build options
 android.release_artifact = apk
 android.debug = True
+android.logcat_filters = *:S python:D
 
 [buildozer]
 log_level = 2
