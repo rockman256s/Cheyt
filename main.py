@@ -25,65 +25,61 @@ def main():
         else:
             st.error("Ошибка при добавлении точки")
 
-    # Отображение графика калибровки и таблицы данных
+    # Получаем точки калибровки
     points = get_all_points()
-    if len(points) > 0:
-        # Отображаем таблицу данных с улучшенной видимостью
-        st.header("Данные калибровки")
-        points_df = pd.DataFrame(points, columns=['Давление', 'Вес'])
 
-        # Стилизация таблицы для лучшей видимости
+    if points:
+        # Таблица данных
+        st.header("Данные калибровки")
+        df = pd.DataFrame(points, columns=['Давление', 'Вес'])
         st.dataframe(
-            points_df.style.format({
+            df.style.format({
                 'Давление': '{:.2f}',
                 'Вес': '{:.2f}'
             }),
             hide_index=True,
-            height=min(len(points) * 35 + 38, 250),  # Динамическая высота таблицы
-            use_container_width=True
+            height=min(len(points) * 35 + 38, 250)
         )
 
         # График калибровки
-        st.header("График калибровки")
         if len(points) >= 2:
-            # Получаем точки для криволинейной интерполяции
-            x_curve, y_curve = get_interpolation_curve(points, num_points=200)  # Увеличим количество точек для гладкости
+            st.header("График калибровки")
+            try:
+                # Получаем точки для кривой
+                x_curve, y_curve = get_interpolation_curve(points, num_points=200)
 
-            # Создаем DataFrame для визуализации
-            chart_data = pd.DataFrame({
-                'Давление': np.concatenate([x_curve, [p[0] for p in points]]),
-                'Вес': np.concatenate([y_curve, [p[1] for p in points]]),
-                'Тип': ['Кривая'] * len(x_curve) + ['Точка'] * len(points)
-            })
+                # Создаем DataFrame для кривой
+                curve_df = pd.DataFrame({
+                    'Давление': x_curve,
+                    'Вес': y_curve
+                })
 
-            # Настраиваем график
-            st.line_chart(
-                data=chart_data[chart_data['Тип'] == 'Кривая'],
-                x='Давление',
-                y='Вес'
-            )
+                # Отображаем кривую
+                st.line_chart(curve_df, x='Давление', y='Вес')
 
-            # Добавляем точки поверх линии
-            st.scatter_chart(
-                data=chart_data[chart_data['Тип'] == 'Точка'],
-                x='Давление',
-                y='Вес'
-            )
+                # Отображаем точки калибровки
+                points_df = pd.DataFrame(points, columns=['Давление', 'Вес'])
+                st.scatter_chart(points_df, x='Давление', y='Вес')
 
-            # Расчет веса
-            st.header("Расчет веса")
-            input_pressure = st.number_input(
-                "Введите давление для расчета:", 
-                min_value=0.0,
-                format="%.2f"
-            )
+                # Расчет веса
+                st.header("Расчет веса")
+                input_pressure = st.number_input(
+                    "Введите давление для расчета:",
+                    min_value=0.0,
+                    format="%.2f"
+                )
 
-            if st.button("Рассчитать"):
-                if len(points) == 2:
-                    result = linear_interpolation(input_pressure, points)
-                else:
-                    result = quadratic_interpolation(input_pressure, points)
-                st.success(f"Расчетный вес: {result:.2f}")
+                if st.button("Рассчитать"):
+                    try:
+                        if len(points) == 2:
+                            result = linear_interpolation(input_pressure, points)
+                        else:
+                            result = quadratic_interpolation(input_pressure, points)
+                        st.success(f"Расчетный вес: {result:.2f}")
+                    except Exception as e:
+                        st.error(f"Ошибка при расчете: {str(e)}")
+            except Exception as e:
+                st.error(f"Ошибка при построении графика: {str(e)}")
         else:
             st.info("Добавьте еще точки для построения графика")
     else:
