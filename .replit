@@ -31,6 +31,10 @@ args = "beeware_app"
 task = "workflow.run"
 args = "streamlit_app"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "calculator"
+
 [[workflows.workflow]]
 name = "kivy_app"
 author = "agent"
@@ -57,7 +61,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python android_main.py"
+args = "python main.py"
 
 [[workflows.workflow]]
 name = "beeware_app"
@@ -87,6 +91,20 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "streamlit run main.py"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "calculator"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
 
 [[ports]]
 localPort = 5000
