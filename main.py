@@ -15,10 +15,7 @@ class WeightCalculator:
         """Initialize database with proper schema"""
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
-        # Drop existing table if exists
-        c.execute('DROP TABLE IF EXISTS calibration_points')
-        # Create new table with proper schema
-        c.execute('''CREATE TABLE calibration_points
+        c.execute('''CREATE TABLE IF NOT EXISTS calibration_points
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                      pressure REAL NOT NULL,
                      weight REAL NOT NULL)''')
@@ -27,46 +24,58 @@ class WeightCalculator:
 
     def load_points(self):
         """Load calibration points from database"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        c.execute("SELECT id, pressure, weight FROM calibration_points ORDER BY pressure")
-        self.calibration_points = c.fetchall()
-        conn.close()
-        return self.calibration_points
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute("SELECT id, pressure, weight FROM calibration_points ORDER BY pressure")
+            self.calibration_points = c.fetchall()
+            conn.close()
+            return self.calibration_points
+        except sqlite3.Error:
+            return []
 
     def add_point(self, pressure, weight):
         """Add new calibration point"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        c.execute("INSERT INTO calibration_points (pressure, weight) VALUES (?, ?)",
-                 (pressure, weight))
-        conn.commit()
-        conn.close()
-        self.load_points()
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute("INSERT INTO calibration_points (pressure, weight) VALUES (?, ?)",
+                     (pressure, weight))
+            conn.commit()
+            conn.close()
+            return self.load_points()
+        except sqlite3.Error:
+            return False
 
     def delete_point(self, point_id):
         """Delete calibration point by id"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        c.execute("DELETE FROM calibration_points WHERE id = ?", (point_id,))
-        conn.commit()
-        conn.close()
-        self.load_points()
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute("DELETE FROM calibration_points WHERE id = ?", (point_id,))
+            conn.commit()
+            conn.close()
+            return self.load_points()
+        except sqlite3.Error:
+            return False
 
     def calculate_weight(self, pressure):
         """Calculate weight using interpolation"""
         if len(self.calibration_points) < 2:
             return None
 
-        pressures = np.array([p[1] for p in self.calibration_points])
-        weights = np.array([p[2] for p in self.calibration_points])
+        try:
+            pressures = np.array([p[1] for p in self.calibration_points])
+            weights = np.array([p[2] for p in self.calibration_points])
 
-        if len(self.calibration_points) == 2:
-            f = interpolate.interp1d(pressures, weights, kind='linear', fill_value='extrapolate')
-        else:
-            f = interpolate.interp1d(pressures, weights, kind='quadratic', fill_value='extrapolate')
+            if len(self.calibration_points) == 2:
+                f = interpolate.interp1d(pressures, weights, kind='linear', fill_value='extrapolate')
+            else:
+                f = interpolate.interp1d(pressures, weights, kind='quadratic', fill_value='extrapolate')
 
-        return float(f(pressure))
+            return float(f(pressure))
+        except:
+            return None
 
 def main(page: ft.Page):
     page.title = "Прогноз веса"
@@ -99,69 +108,70 @@ def main(page: ft.Page):
         if len(calc.calibration_points) < 2:
             return ft.Text("Добавьте минимум 2 точки для отображения графика")
 
-        pressures = [p[1] for p in calc.calibration_points]
-        weights = [p[2] for p in calc.calibration_points]
+        try:
+            pressures = [p[1] for p in calc.calibration_points]
+            weights = [p[2] for p in calc.calibration_points]
 
-        # Создаем точки для интерполированной кривой
-        x_interp = np.linspace(min(pressures), max(pressures), 100)
-        if len(calc.calibration_points) == 2:
-            f = interpolate.interp1d(pressures, weights, kind='linear')
-        else:
-            f = interpolate.interp1d(pressures, weights, kind='quadratic')
-        y_interp = f(x_interp)
+            # Создаем точки для интерполированной кривой
+            x_interp = np.linspace(min(pressures), max(pressures), 50)
+            if len(calc.calibration_points) == 2:
+                f = interpolate.interp1d(pressures, weights, kind='linear')
+            else:
+                f = interpolate.interp1d(pressures, weights, kind='quadratic')
+            y_interp = f(x_interp)
 
-        # График
-        chart = ft.LineChart(
-            tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.WHITE),
-            expand=True,
-            min_y=min(weights) * 0.9,
-            max_y=max(weights) * 1.1,
-            min_x=min(pressures) * 0.9,
-            max_x=max(pressures) * 1.1,
-            left_axis=ft.ChartAxis(
-                title=ft.Text("Вес"),
-                labels_size=50,
-            ),
-            bottom_axis=ft.ChartAxis(
-                title=ft.Text("Давление"),
-                labels_size=50,
-            ),
-        )
-
-        # Добавляем линию интерполяции
-        chart.data_series.append(
-            ft.LineChartData(
-                color=ft.colors.RED,
-                stroke_width=2,
-                data_points=[
-                    ft.LineChartDataPoint(x, y)
-                    for x, y in zip(x_interp, y_interp)
-                ],
-            )
-        )
-
-        # Добавляем точки калибровки
-        chart.data_series.append(
-            ft.LineChartData(
-                color=ft.colors.BLUE,
-                stroke_width=0,
-                point_style=ft.PointStyle(
-                    radius=5,
-                    stroke_width=2,
-                    color=ft.colors.BLUE,
+            # График
+            chart = ft.LineChart(
+                tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.WHITE),
+                expand=True,
+                min_y=min(weights) * 0.9,
+                max_y=max(weights) * 1.1,
+                min_x=min(pressures) * 0.9,
+                max_x=max(pressures) * 1.1,
+                left_axis=ft.ChartAxis(
+                    title=ft.Text("Вес"),
+                    labels_size=50,
                 ),
-                data_points=[
-                    ft.LineChartDataPoint(p, w)
-                    for p, w in zip(pressures, weights)
-                ],
+                bottom_axis=ft.ChartAxis(
+                    title=ft.Text("Давление"),
+                    labels_size=50,
+                ),
             )
-        )
 
-        return chart
+            # Добавляем линию интерполяции
+            chart.data_series.append(
+                ft.LineChartData(
+                    color=ft.colors.RED,
+                    stroke_width=2,
+                    data_points=[
+                        ft.LineChartDataPoint(x, y)
+                        for x, y in zip(x_interp, y_interp)
+                    ],
+                )
+            )
+
+            # Добавляем точки калибровки (как маленькие круги)
+            chart.data_series.append(
+                ft.LineChartData(
+                    color=ft.colors.BLUE,
+                    stroke_width=4,
+                    data_points=[
+                        ft.LineChartDataPoint(p, w)
+                        for p, w in zip(pressures, weights)
+                    ],
+                )
+            )
+
+            return chart
+        except:
+            return ft.Text("Ошибка при создании графика")
 
     # Таблица калибровочных точек
     def create_data_table():
         points = calc.load_points()
+
+        if not points:
+            return ft.Text("Нет калибровочных точек")
 
         return ft.DataTable(
             columns=[
@@ -227,33 +237,48 @@ def main(page: ft.Page):
     )
 
     def update_display():
-        chart_container.content = create_chart()
-        data_table_container.content = create_data_table()
-        page.update()
+        try:
+            chart_container.content = create_chart()
+            data_table_container.content = create_data_table()
+            page.update()
+        except Exception as e:
+            result_text.value = f"Ошибка обновления: {str(e)}"
+            result_text.color = ft.colors.RED
+            page.update()
 
     def add_calibration_point(e):
         try:
             pressure = float(pressure_input.value)
             weight = float(weight_input.value)
-            calc.add_point(pressure, weight)
-            result_text.value = "✅ Точка калибровки добавлена"
-            result_text.color = ft.colors.GREEN
-            pressure_input.value = ""
-            weight_input.value = ""
-            update_display()
+
+            if calc.add_point(pressure, weight):
+                result_text.value = "✅ Точка калибровки добавлена"
+                result_text.color = ft.colors.GREEN
+                pressure_input.value = ""
+                weight_input.value = ""
+                update_display()
+            else:
+                result_text.value = "❌ Ошибка добавления точки"
+                result_text.color = ft.colors.RED
+                page.update()
         except ValueError:
             result_text.value = "❌ Ошибка: введите числовые значения"
             result_text.color = ft.colors.RED
             page.update()
 
     def delete_point(point_id):
-        calc.delete_point(point_id)
-        update_display()
+        if calc.delete_point(point_id):
+            update_display()
+        else:
+            result_text.value = "❌ Ошибка удаления точки"
+            result_text.color = ft.colors.RED
+            page.update()
 
     def calculate_result(e):
         try:
             pressure = float(pressure_input.value)
             result = calc.calculate_weight(pressure)
+
             if result is not None:
                 result_text.value = f"Расчетный вес: {result:.2f}"
                 result_text.color = ft.colors.BLACK
