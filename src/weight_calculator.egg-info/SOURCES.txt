@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+src/weight_calculator/__init__.py
+src/weight_calculator/app.py
+src/weight_calculator/database.py
+src/weight_calculator/interpolation.py
+src/weight_calculator.egg-info/PKG-INFO
+src/weight_calculator.egg-info/SOURCES.txt
+src/weight_calculator.egg-info/dependency_links.txt
+src/weight_calculator.egg-info/requires.txt
+src/weight_calculator.egg-info/top_level.txt
