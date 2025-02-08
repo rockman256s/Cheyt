@@ -48,23 +48,20 @@ def main():
             # Получаем точки для линии интерполяции
             x_curve, y_curve = get_interpolation_curve(points)
 
-            # Создаем DataFrame для графика
+            # Создаем единый DataFrame для графика
             chart_df = pd.DataFrame({
-                'Давление': list(x_curve) + [p[0] for p in points],
-                'Вес': list(y_curve) + [p[1] for p in points],
+                'Давление': np.concatenate([x_curve, [p[0] for p in points]]),
+                'Вес': np.concatenate([y_curve, [p[1] for p in points]]),
                 'Тип': ['Линия'] * len(x_curve) + ['Точка'] * len(points)
             })
 
-            # Отображаем комбинированный график
-            st.line_chart(
-                chart_df[chart_df['Тип'] == 'Линия'],
-                x='Давление',
-                y='Вес'
-            )
+            # Отображаем единый график
             st.scatter_chart(
-                chart_df[chart_df['Тип'] == 'Точка'],
+                data=chart_df,
                 x='Давление',
-                y='Вес'
+                y='Вес',
+                color='Тип',
+                size='Тип'
             )
 
             # Расчет веса
