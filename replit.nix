@@ -1,5 +1,11 @@
 {pkgs}: {
   deps = [
+    pkgs.libffi
+    pkgs.ncurses
+    pkgs.xz
+    pkgs.openjdk11
+    pkgs.binutils
+    pkgs.gcc
     pkgs.cairo
     pkgs.mtdev
     pkgs.libcxx

@@ -38,40 +38,62 @@ class WeightCalculatorApp(App):
         layout.add_widget(title)
 
         # Calibration inputs
-        cal_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(120))
+        cal_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(200))
+
+        # Pressure input
+        pressure_label = Label(
+            text='Давление:',
+            size_hint_y=None,
+            height=dp(30)
+        )
         self.pressure_input = TextInput(
-            hint_text='Давление',
             multiline=False,
+            input_type='number',
             size_hint_y=None,
             height=dp(40)
+        )
+
+        # Weight input
+        weight_label = Label(
+            text='Вес:',
+            size_hint_y=None,
+            height=dp(30)
         )
         self.weight_input = TextInput(
-            hint_text='Вес',
             multiline=False,
+            input_type='number',
             size_hint_y=None,
             height=dp(40)
         )
+
         add_button = Button(
-            text='Добавить точку',
+            text='Добавить точку калибровки',
             size_hint_y=None,
             height=dp(40)
         )
         add_button.bind(on_press=self.add_point)
 
+        cal_layout.add_widget(pressure_label)
         cal_layout.add_widget(self.pressure_input)
+        cal_layout.add_widget(weight_label)
         cal_layout.add_widget(self.weight_input)
         cal_layout.add_widget(add_button)
 
         # Weight calculation
-        calc_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(120))
+        calc_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(150))
+        calc_label = Label(
+            text='Введите давление для расчета:',
+            size_hint_y=None,
+            height=dp(30)
+        )
         self.calc_input = TextInput(
-            hint_text='Введите давление для расчета',
             multiline=False,
+            input_type='number',
             size_hint_y=None,
             height=dp(40)
         )
         calc_button = Button(
-            text='Рассчитать',
+            text='Рассчитать вес',
             size_hint_y=None,
             height=dp(40)
         )
@@ -82,11 +104,12 @@ class WeightCalculatorApp(App):
             height=dp(40)
         )
 
+        calc_layout.add_widget(calc_label)
         calc_layout.add_widget(self.calc_input)
         calc_layout.add_widget(calc_button)
         calc_layout.add_widget(self.result_label)
 
-        # Add all widgets to main layout
+        # Add all layouts to main layout
         layout.add_widget(cal_layout)
         layout.add_widget(calc_layout)
 
@@ -120,7 +143,7 @@ class WeightCalculatorApp(App):
 
             self.pressure_input.text = ''
             self.weight_input.text = ''
-            self.result_label.text = 'Точка добавлена'
+            self.result_label.text = 'Точка калибровки добавлена'
         except ValueError:
             self.result_label.text = 'Ошибка: введите числовые значения'
         except sqlite3.Error as e:
