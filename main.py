@@ -29,14 +29,21 @@ def main():
     points = get_all_points()
     if len(points) > 0:
         st.header("График калибровки")
+
+        # Создаем DataFrame для точек калибровки
+        points_df = pd.DataFrame(points, columns=['Давление', 'Вес'])
+
         if len(points) >= 2:
+            # Получаем точки для линии интерполяции
             x_curve, y_curve = get_interpolation_curve(points)
-            # Создаем DataFrame с именованными столбцами
-            df = pd.DataFrame({
+            curve_df = pd.DataFrame({
                 'Давление': x_curve,
                 'Вес': y_curve
             })
-            st.line_chart(df, x='Давление', y='Вес')
+
+            # Отображаем график с точками и линией
+            st.scatter_chart(points_df, x='Давление', y='Вес')
+            st.line_chart(curve_df, x='Давление', y='Вес')
 
             # Расчет веса
             st.header("Расчет веса")
