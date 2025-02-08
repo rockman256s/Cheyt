@@ -12,8 +12,6 @@ version = 1.0.0.4
 requirements = python3,\
     kivy==2.3.1,\
     pillow,\
-    numpy,\
-    sqlite3,\
     plyer,\
     android
 
@@ -34,6 +32,12 @@ android.release_artifact = apk
 android.debug = True
 android.logcat_filters = *:S python:D
 android.copy_libs = 1
+
+# Оптимизация сборки
+android.enable_androidx = True
+android.gradle_dependencies = androidx.core:core:1.6.0
+p4a.hook = gradle
+p4a.branch = develop
 
 [buildozer]
 log_level = 2
