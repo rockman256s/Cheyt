@@ -16,7 +16,7 @@ source.dir = .
 version = 1.0.0
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,db
+source.include_exts = py,png,jpg,kv,atlas,db,sqlite3
 
 # (list) List of directory to exclude (let empty to not exclude anything)
 source.exclude_dirs = tests, bin, .github, __pycache__, .buildozer
@@ -44,7 +44,7 @@ android.minapi = 21
 android.sdk = 33
 android.ndk = 25b
 android.accept_sdk_license = True
-android.arch = armeabi-v7a
+android.arch = armeabi-v7a arm64-v8a
 
 # (bool) If True, then skip trying to update the Android sdk
 android.skip_update = False
@@ -54,6 +54,10 @@ android.accept_sdk_license = True
 
 # (str) Android entry point, default is ok for Kivy-based app
 android.entrypoint = org.kivy.android.PythonActivity
+
+# (list) By default buildozer will search for a folder named "recipes" 
+# and will use those instead.
+android.p4a_dir = /home/runner/.local/share/python-for-android
 
 # (str) The Android app theme, default is ok for Kivy-based app
 android.apptheme = @android:style/Theme.NoTitleBar
