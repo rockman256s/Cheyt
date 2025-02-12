@@ -202,6 +202,7 @@ def main(page: ft.Page):
                             ft.Text("Вес", width=100),
                             ft.Text("", width=30),  # Колонка для кнопки удаления
                         ],
+                        spacing=0,  # Убираем spacing между элементами
                     ),
                     padding=10,
                     bgcolor=ft.colors.BLUE_50,
@@ -231,15 +232,19 @@ def main(page: ft.Page):
                                 text_size=14,
                                 on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'weight'),
                             ),
-                            ft.IconButton(
-                                icon=ft.icons.DELETE_FOREVER,
-                                icon_color=ft.colors.RED_500,
-                                width=30,
-                                icon_size=24,
-                                tooltip="Удалить точку",
-                                on_click=lambda e, pid=point[0]: delete_point(pid),
+                            ft.Container(
+                                content=ft.IconButton(
+                                    icon=ft.icons.DELETE_FOREVER,
+                                    icon_color=ft.colors.RED_500,
+                                    width=30,
+                                    icon_size=24,
+                                    tooltip="Удалить точку",
+                                    on_click=lambda e, pid=point[0]: delete_point(pid),
+                                ),
+                                margin=ft.margin.only(left=-30),  # Сдвигаем кнопку влево
                             ),
                         ],
+                        spacing=0,  # Убираем spacing между элементами
                     ),
                     padding=5,
                 )
@@ -250,15 +255,19 @@ def main(page: ft.Page):
                             ft.Text(f"{point[0]}", width=50),
                             ft.Text(f"{point[1]:.2f}", width=100),
                             ft.Text(f"{point[2]:.2f}", width=100),
-                            ft.IconButton(
-                                icon=ft.icons.DELETE_FOREVER,
-                                icon_color=ft.colors.RED_500,
-                                width=30,
-                                icon_size=24,
-                                tooltip="Удалить точку",
-                                on_click=lambda e, pid=point[0]: delete_point(pid),
+                            ft.Container(
+                                content=ft.IconButton(
+                                    icon=ft.icons.DELETE_FOREVER,
+                                    icon_color=ft.colors.RED_500,
+                                    width=30,
+                                    icon_size=24,
+                                    tooltip="Удалить точку",
+                                    on_click=lambda e, pid=point[0]: delete_point(pid),
+                                ),
+                                margin=ft.margin.only(left=-30),  # Сдвигаем кнопку влево
                             ),
                         ],
+                        spacing=0,  # Убираем spacing между элементами
                     ),
                     padding=5,
                 )
