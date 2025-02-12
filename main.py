@@ -236,7 +236,7 @@ def main(page: ft.Page):
                 ),
             )
 
-            # Добавляем только одну линию - интерполированную
+            # Добавляем интерполированную линию
             chart.data_series.append(
                 ft.LineChartData(
                     color=ft.colors.BLUE,
@@ -248,11 +248,12 @@ def main(page: ft.Page):
                 )
             )
 
-            # Добавляем точки калибровки как маркеры
+            # Добавляем точки калибровки
             chart.data_series.append(
                 ft.LineChartData(
                     color=ft.colors.RED,
-                    stroke_width=4,
+                    stroke_width=6,
+                    curve=ft.ChartCurve.NONE,
                     data_points=[
                         ft.LineChartDataPoint(p, w)
                         for p, w in zip(pressures, weights)
