@@ -268,22 +268,16 @@ def main(page: ft.Page):
                         ft.DataCell(ft.Text(f"{point[2]:.2f}")),
                         ft.DataCell(
                             ft.Row(
-                                controls=[
+                                [
                                     ft.IconButton(
-                                        icon=ft.icons.EDIT_OUTLINED,
-                                        icon_color=ft.colors.BLUE,
+                                        icon=ft.icons.EDIT,
+                                        on_click=lambda e, p=point: show_edit_dialog(p[0], p[1], p[2]),
                                         tooltip="Редактировать",
-                                        data=point,
-                                        on_click=lambda e, p=point: show_edit_dialog(
-                                            p[0], p[1], p[2]
-                                        ),
                                     ),
                                     ft.IconButton(
-                                        icon=ft.icons.DELETE_OUTLINE,
-                                        icon_color=ft.colors.RED_400,
-                                        tooltip="Удалить",
-                                        data=point[0],
+                                        icon=ft.icons.DELETE,
                                         on_click=lambda e, pid=point[0]: delete_point(pid),
+                                        tooltip="Удалить",
                                     ),
                                 ],
                                 alignment=ft.MainAxisAlignment.CENTER,
