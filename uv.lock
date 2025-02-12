@@ -1291,6 +1291,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "pillow" },
+    { name = "requests" },
     { name = "scipy" },
     { name = "streamlit" },
 ]
@@ -1306,6 +1307,7 @@ requires-dist = [
     { name = "numpy", specifier = "==1.26.0" },
     { name = "pandas", specifier = "==2.1.0" },
     { name = "pillow", specifier = ">=10.0.1" },
+    { name = "requests", specifier = ">=2.32.3" },
     { name = "scipy", specifier = "==1.11.3" },
     { name = "streamlit", specifier = "==1.28.0" },
 ]

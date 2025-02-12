@@ -4,11 +4,12 @@ from scipy import interpolate
 import sqlite3
 import os
 from pathlib import Path
+from datetime import datetime
+import requests
 
 class WeightCalculator:
     def __init__(self):
         self.calibration_points = []
-        # Изменяем путь к базе данных на постоянное хранилище
         self.db_path = str(Path.home() / "calibration.db")
         self.init_db()
         self.load_points()
@@ -19,11 +20,20 @@ class WeightCalculator:
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
 
-            # Создаем таблицу, если она не существует
+            # Таблица калибровочных точек
             c.execute('''CREATE TABLE IF NOT EXISTS calibration_points
                         (id INTEGER PRIMARY KEY AUTOINCREMENT,
                          pressure REAL NOT NULL,
                          weight REAL NOT NULL)''')
+
+            # Таблица истории расчетов
+            c.execute('''CREATE TABLE IF NOT EXISTS weight_history
+                        (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                         date TEXT NOT NULL,
+                         pressure REAL NOT NULL,
+                         weight REAL NOT NULL,
+                         location TEXT)''')
+
             conn.commit()
             conn.close()
         except sqlite3.Error as e:
@@ -121,6 +131,50 @@ class WeightCalculator:
         except Exception as e:
             print(f"Ошибка расчета веса: {str(e)}")
             return None
+
+    def save_calculation(self, pressure, weight):
+        """Save calculation to history"""
+        try:
+            # Получаем местоположение (только штат)
+            location = "Неизвестно"
+            try:
+                response = requests.get('http://ip-api.com/json/')
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('status') == 'success':
+                        location = data.get('regionName', 'Неизвестно')
+            except:
+                pass
+
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute("""INSERT INTO weight_history (date, pressure, weight, location)
+                        VALUES (?, ?, ?, ?)""",
+                     (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                      pressure, weight, location))
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as e:
+            print(f"Ошибка сохранения расчета: {str(e)}")
+            return False
+
+    def get_calculation_history(self):
+        """Get calculation history"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute("""SELECT date, pressure, weight, location 
+                        FROM weight_history 
+                        ORDER BY date DESC 
+                        LIMIT 50""")
+            history = c.fetchall()
+            conn.close()
+            return history
+        except sqlite3.Error as e:
+            print(f"Ошибка получения истории: {str(e)}")
+            return []
+
 
 def main(page: ft.Page):
     page.title = "Прогноз веса"
@@ -382,8 +436,11 @@ def main(page: ft.Page):
             result = calc.calculate_weight(pressure)
 
             if result is not None:
+                calc.save_calculation(pressure, result)
                 result_text.value = f"Расчетный вес: {result:.2f}"
                 result_text.color = ft.colors.BLACK
+                # Обновляем таблицу истории
+                history_container.content = create_history_table()
             else:
                 result_text.value = "Необходимо минимум 2 точки калибровки"
                 result_text.color = ft.colors.RED
@@ -392,6 +449,32 @@ def main(page: ft.Page):
             result_text.value = "❌ Ошибка: введите числовое значение давления"
             result_text.color = ft.colors.RED
             page.update()
+
+    def create_history_table():
+        history = calc.get_calculation_history()
+        if not history:
+            return ft.Text("История расчетов пуста")
+
+        table = ft.DataTable(
+            columns=[
+                ft.DataColumn(ft.Text("Дата/Время")),
+                ft.DataColumn(ft.Text("Давление")),
+                ft.DataColumn(ft.Text("Вес")),
+                ft.DataColumn(ft.Text("Местоположение")),
+            ],
+            rows=[
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(ft.Text(record[0])),
+                        ft.DataCell(ft.Text(f"{record[1]:.2f}")),
+                        ft.DataCell(ft.Text(f"{record[2]:.2f}")),
+                        ft.DataCell(ft.Text(record[3])),
+                    ],
+                ) for record in history
+            ],
+        )
+        return table
+
 
     add_button = ft.ElevatedButton(
         "Добавить точку калибровки",
@@ -404,15 +487,27 @@ def main(page: ft.Page):
         )
     )
 
-    calc_button = ft.ElevatedButton(
-        "Рассчитать вес",
-        width=get_size(400, page.width * 0.9),
-        on_click=calculate_result,
-        style=ft.ButtonStyle(
-            color=ft.colors.WHITE,
-            bgcolor=ft.colors.GREEN,
-            shape=ft.RoundedRectangleBorder(radius=8),
-        )
+    calc_button = ft.Container(
+        content=ft.ElevatedButton(
+            content=ft.Row(
+                [
+                    ft.Icon(name=ft.icons.CALCULATE, color=ft.colors.WHITE),
+                    ft.Text("Рассчитать вес", color=ft.colors.WHITE, size=16),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            style=ft.ButtonStyle(
+                color=ft.colors.WHITE,
+                bgcolor=ft.colors.BLUE,
+                padding=20,
+                animation_duration=300,
+                elevation=5,
+                shape=ft.RoundedRectangleBorder(radius=10),
+            ),
+            on_click=calculate_result,
+            width=get_size(400, page.width * 0.9),
+        ),
+        margin=ft.margin.only(bottom=20),
     )
 
     chart_container = ft.Container(
@@ -426,6 +521,15 @@ def main(page: ft.Page):
     data_table_container = ft.Container(
         content=create_data_table(),
         padding=10,
+    )
+
+    # Контейнер для таблицы истории
+    history_container = ft.Container(
+        content=create_history_table(),
+        padding=10,
+        border=ft.border.all(1, ft.colors.GREY_400),
+        border_radius=10,
+        margin=ft.margin.only(top=20, bottom=20),
     )
 
     def on_resize(e):
@@ -455,11 +559,15 @@ def main(page: ft.Page):
                     ),
                     ft.Divider(height=20),
                     pressure_input,
-                    weight_input,
-                    add_button,
-                    ft.Divider(height=20),
                     calc_button,
                     result_text,
+                    ft.Divider(height=20),
+                    ft.Text(
+                        "История расчетов",
+                        size=get_size(20, 16),
+                        weight=ft.FontWeight.BOLD
+                    ),
+                    history_container,
                     ft.Divider(height=20),
                     ft.Text(
                         "График калибровочной кривой",
@@ -474,6 +582,7 @@ def main(page: ft.Page):
                         weight=ft.FontWeight.BOLD
                     ),
                     data_table_container,
+                    add_button,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10
