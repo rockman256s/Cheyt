@@ -9,7 +9,7 @@ import requests
 from functools import lru_cache
 import json
 
-# Language translations
+# Add Spanish translations to the TRANSLATIONS dictionary
 TRANSLATIONS = {
     "en": {
         "app_title": "Weight Calculator",
@@ -34,6 +34,30 @@ TRANSLATIONS = {
         "changes_saved": "✅ Changes saved",
         "changes_error": "❌ Error saving changes",
         "unknown": "Unknown"
+    },
+    "es": {
+        "app_title": "Calculadora de peso",
+        "pressure": "Presión",
+        "weight": "Peso",
+        "location": "Ubicación",
+        "date": "Fecha",
+        "calculate": "Calcular peso",
+        "add_point": "Añadir punto de calibración",
+        "calculation_history": "Historial de cálculos",
+        "calibration_curve": "Gráfico de curva de calibración",
+        "calibration_points": "Tabla de puntos de calibración",
+        "add_new_point": "Añadir nuevo punto de calibración:",
+        "edit": "Editar",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "clear_history": "Borrar historial",
+        "min_points_msg": "Agregue puntos de calibración (mínimo 2) para calcular el peso según la presión.",
+        "error_numeric": "Error: ingrese valores numéricos",
+        "point_added": "✅ Punto de calibración añadido",
+        "point_error": "❌ Error al añadir punto",
+        "changes_saved": "✅ Cambios guardados",
+        "changes_error": "❌ Error al guardar cambios",
+        "unknown": "Desconocido"
     },
     "ru": {
         "app_title": "Калькулятор веса",
@@ -460,10 +484,12 @@ def main(page: ft.Page):
         update_texts()
         update_display()
 
+    # Update the language dropdown options to include Spanish
     language_dropdown = ft.Dropdown(
         width=200,
         options=[
             ft.dropdown.Option("en", "English"),
+            ft.dropdown.Option("es", "Español"),
             ft.dropdown.Option("ru", "Русский"),
             ft.dropdown.Option("uk", "Українська"),
             ft.dropdown.Option("hi", "हिंदी"),
