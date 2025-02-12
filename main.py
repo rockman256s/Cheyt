@@ -580,7 +580,7 @@ def main(page: ft.Page):
 
         table = ft.DataTable(
             columns=[
-                ft.DataColumn(ft.Text("Дата/Время", size=12)),
+                ft.DataColumn(ft.Text("Дата", size=12)),
                 ft.DataColumn(ft.Text("Давление", size=12)),
                 ft.DataColumn(ft.Text("Вес", size=12)),
                 ft.DataColumn(ft.Text("Местоположение", size=12, width=200)),
@@ -633,6 +633,15 @@ def main(page: ft.Page):
         )
 
         return ft.Column([table, pagination, clear_button], spacing=20)
+
+    # Создаем контейнер для таблицы истории с отрицательным отступом слева
+    history_container = ft.Container(
+        content=create_history_table(),
+        padding=10,
+        border=ft.border.all(1, ft.colors.GREY_400),
+        border_radius=10,
+        margin=ft.margin.only(top=20, bottom=20, left=-10),
+    )
 
     def change_page(delta):
         calc.current_page += delta
@@ -697,13 +706,6 @@ def main(page: ft.Page):
         padding=10,
     )
 
-    history_container = ft.Container(
-        content=create_history_table(),
-        padding=10,
-        border=ft.border.all(1, ft.colors.GREY_400),
-        border_radius=10,
-        margin=ft.margin.only(top=20, bottom=20),
-    )
 
     def on_resize(e):
         pressure_input.width = get_size(400, page.width * 0.9)
