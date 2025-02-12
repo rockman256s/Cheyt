@@ -95,7 +95,9 @@ class WeightCalculator:
             c.execute("DELETE FROM calibration_points WHERE id = ?", (point_id,))
             conn.commit()
             conn.close()
-            return self.load_points()
+            # Обновляем список точек после удаления
+            self.calibration_points = self.load_points()
+            update_display()
         except sqlite3.Error as e:
             print(f"Ошибка удаления точки: {str(e)}")
             return False
@@ -198,7 +200,7 @@ def main(page: ft.Page):
                             ft.Text("ID", width=50),
                             ft.Text("Давление", width=100),
                             ft.Text("Вес", width=100),
-                            ft.Text("", width=40),  # Пустая колонка для кнопки удаления
+                            ft.Text("", width=30),  # Уменьшенная колонка для кнопки удаления
                         ],
                     ),
                     padding=10,
@@ -232,8 +234,9 @@ def main(page: ft.Page):
                             ft.IconButton(
                                 icon=ft.icons.DELETE,
                                 icon_color=ft.colors.RED,
-                                width=40,
-                                on_click=lambda e, pid=point[0]: delete_point(pid)
+                                width=30,
+                                icon_size=20,
+                                on_click=lambda pid=point[0]: delete_point(pid),
                             ),
                         ],
                     ),
@@ -249,8 +252,9 @@ def main(page: ft.Page):
                             ft.IconButton(
                                 icon=ft.icons.DELETE,
                                 icon_color=ft.colors.RED,
-                                width=40,
-                                on_click=lambda e, pid=point[0]: delete_point(pid)
+                                width=30,
+                                icon_size=20,
+                                on_click=lambda pid=point[0]: delete_point(pid),
                             ),
                         ],
                     ),
