@@ -592,7 +592,7 @@ def main(page: ft.Page):
             rows=[
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").strftime("%m/%d/%Y"), size=12)),
+                        ft.DataCell(ft.Text(datetime.strptime(record[0], "%m/%d/%Y %H:%M:%S").strftime("%m/%d/%Y"), size=12)),
                         ft.DataCell(ft.Text(f"{record[1]:.2f}", size=12)),
                         ft.DataCell(ft.Text(f"{record[2]:.2f}", size=12)),
                         ft.DataCell(
@@ -605,7 +605,7 @@ def main(page: ft.Page):
                                     text_align=ft.TextAlign.LEFT,
                                     overflow=ft.TextOverflow.ELLIPSIS
                                 ),
-                                padding=ft.padding.only(right=20)  # Увеличиваем отступ справа
+                                padding=ft.padding.symmetric(horizontal=20)  # Добавляем отступы слева и справа
                             )
                         ),
                     ],
