@@ -210,7 +210,7 @@ def main(page: ft.Page):
             # Создаем точки для интерполированной кривой
             x_interp = np.linspace(min(pressures), max(pressures), 50)
 
-            # Линейная интерполяция для 2 точек, квадратичная для >2 точек
+            # Выбираем тип интерполяции в зависимости от количества точек
             if len(calc.calibration_points) == 2:
                 f = interpolate.interp1d(pressures, weights, kind='linear')
             else:
@@ -236,7 +236,7 @@ def main(page: ft.Page):
                 ),
             )
 
-            # Добавляем линию интерполяции
+            # Добавляем интерполированную линию
             chart.data_series.append(
                 ft.LineChartData(
                     color=ft.colors.RED,
@@ -288,7 +288,7 @@ def main(page: ft.Page):
                             ft.Row(
                                 controls=[
                                     ft.IconButton(
-                                        ft.icons.EDIT,
+                                        icon=ft.icons.EDIT,
                                         icon_color=ft.colors.BLUE,
                                         tooltip="Редактировать точку",
                                         data=point,
@@ -299,7 +299,7 @@ def main(page: ft.Page):
                                         )
                                     ),
                                     ft.IconButton(
-                                        ft.icons.DELETE,
+                                        icon=ft.icons.DELETE,
                                         icon_color=ft.colors.RED_400,
                                         tooltip="Удалить точку",
                                         data=point[0],
