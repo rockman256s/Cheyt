@@ -9,24 +9,39 @@ import requests
 from functools import lru_cache
 import json
 
+def get_client_ip(page: ft.Page) -> str:
+    """Get client IP address from Flet page"""
+    try:
+        # Получаем IP из заголовков запроса
+        headers = page.client_storage.get('headers', {})
+        ip = headers.get('X-Forwarded-For', '').split(',')[0].strip()
+        if not ip:
+            ip = headers.get('X-Real-IP', '')
+        if not ip:
+            ip = headers.get('Remote-Addr', '')
+        return ip if ip else None
+    except Exception as e:
+        print(f"Ошибка получения IP клиента: {str(e)}")
+        return None
+
 @lru_cache(maxsize=1)
-def get_location_fallback():
-    """Fallback to IP-based location if GPS fails"""
+def get_location_fallback(client_ip=None):
+    """Get location based on client IP"""
     try:
         # Используем несколько сервисов с приоритетом точности
         services = [
             {
-                'url': 'https://ipapi.co/json/',
+                'url': f'https://ipapi.co/{client_ip}/json/' if client_ip else 'https://ipapi.co/json/',
                 'priority': 1,
                 'fields': {'city': 'city', 'region': 'region', 'country': 'country_name'}
             },
             {
-                'url': 'https://ipwho.is/',
+                'url': f'https://ipwho.is/{client_ip}' if client_ip else 'https://ipwho.is/',
                 'priority': 2,
                 'fields': {'city': 'city', 'region': 'region', 'country': 'country'}
             },
             {
-                'url': 'https://ip-api.com/json/',
+                'url': f'https://ip-api.com/json/{client_ip}' if client_ip else 'https://ip-api.com/json/',
                 'priority': 3,
                 'fields': {'city': 'city', 'region': 'regionName', 'country': 'country'}
             }
@@ -86,10 +101,11 @@ def get_location_fallback():
     return "Неизвестно"
 
 class WeightCalculator:
-    def __init__(self):
+    def __init__(self, page: ft.Page):
         self.calibration_points = []
         self.db_path = str(Path.home() / "calibration.db")
-        self.current_location = get_location_fallback()
+        self.client_ip = get_client_ip(page)
+        self.current_location = get_location_fallback(self.client_ip)
         self.current_page = 1
         self.items_per_page = 30
         self.init_db()
@@ -274,7 +290,7 @@ def main(page: ft.Page):
     page.padding = 10 if page.width < 600 else 20
     page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
 
-    calc = WeightCalculator()
+    calc = WeightCalculator(page)
     editing_mode = False
     edited_values = {}
 
@@ -717,11 +733,11 @@ def main(page: ft.Page):
 
     def on_view_pop(view):
         try:
-            calc.current_location = get_location_fallback()
+            calc.current_location = get_location_fallback(calc.client_ip)
             page.update()
         except Exception as e:
             print(f"Ошибка обработки местоположения: {str(e)}")
-            calc.current_location = get_location_fallback()
+            calc.current_location = get_location_fallback(calc.client_ip)
             page.update()
 
     page.on_view_pop = on_view_pop
