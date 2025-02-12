@@ -236,18 +236,6 @@ def main(page: ft.Page):
                 ),
             )
 
-            # Добавляем интерполированную линию
-            chart.data_series.append(
-                ft.LineChartData(
-                    color=ft.colors.RED,
-                    stroke_width=2,
-                    data_points=[
-                        ft.LineChartDataPoint(x, y)
-                        for x, y in zip(x_interp, y_interp)
-                    ],
-                )
-            )
-
             # Добавляем точки калибровки
             chart.data_series.append(
                 ft.LineChartData(
@@ -256,6 +244,18 @@ def main(page: ft.Page):
                     data_points=[
                         ft.LineChartDataPoint(p, w)
                         for p, w in zip(pressures, weights)
+                    ],
+                )
+            )
+
+            # Добавляем интерполированную линию
+            chart.data_series.append(
+                ft.LineChartData(
+                    color=ft.colors.RED,
+                    stroke_width=2,
+                    data_points=[
+                        ft.LineChartDataPoint(x, y)
+                        for x, y in zip(x_interp, y_interp)
                     ],
                 )
             )
@@ -271,7 +271,7 @@ def main(page: ft.Page):
         if not points:
             return ft.Text("Нет калибровочных точек")
 
-        return ft.DataTable(
+        table = ft.DataTable(
             columns=[
                 ft.DataColumn(ft.Text("ID")),
                 ft.DataColumn(ft.Text("Давление")),
@@ -288,7 +288,7 @@ def main(page: ft.Page):
                             ft.Row(
                                 controls=[
                                     ft.IconButton(
-                                        icon=ft.icons.EDIT,
+                                        icon=ft.icons.EDIT_OUTLINED,
                                         icon_color=ft.colors.BLUE,
                                         tooltip="Редактировать точку",
                                         data=point,
@@ -299,13 +299,14 @@ def main(page: ft.Page):
                                         )
                                     ),
                                     ft.IconButton(
-                                        icon=ft.icons.DELETE,
+                                        icon=ft.icons.DELETE_OUTLINE,
                                         icon_color=ft.colors.RED_400,
                                         tooltip="Удалить точку",
                                         data=point[0],
                                         on_click=lambda e: delete_point(e.control.data)
                                     ),
-                                ]
+                                ],
+                                alignment=ft.MainAxisAlignment.CENTER,
                             )
                         ),
                     ],
@@ -313,6 +314,7 @@ def main(page: ft.Page):
                 for point in points
             ],
         )
+        return table
 
     def update_display():
         try:
