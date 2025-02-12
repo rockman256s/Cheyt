@@ -258,9 +258,9 @@ def main(page: ft.Page):
             row = ft.Container(
                 content=ft.Row(
                     [
-                        ft.Text(f"ID: {point[0]}", width=50),
-                        ft.Text(f"Давление: {point[1]:.2f}", width=120),
-                        ft.Text(f"Вес: {point[2]:.2f}", width=120),
+                        ft.Text(f"{point[0]}", width=50),
+                        ft.Text(f"{point[1]:.2f}", width=120),
+                        ft.Text(f"{point[2]:.2f}", width=120),
                         ft.IconButton(
                             icon=ft.icons.EDIT,
                             icon_size=20,
