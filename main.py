@@ -13,7 +13,6 @@ import json
 TRANSLATIONS = {
     "en": {
         "app_title": "Weight Calculator",
-        "title": "Weight Calculator Based on Pressure",
         "pressure": "Pressure",
         "weight": "Weight",
         "location": "Location",
@@ -34,16 +33,10 @@ TRANSLATIONS = {
         "point_error": "❌ Error adding point",
         "changes_saved": "✅ Changes saved",
         "changes_error": "❌ Error saving changes",
-        "unknown": "Unknown",
-        "navigation": "Navigation",
-        "page": "Page",
-        "of": "of",
-        "next": "Next",
-        "previous": "Previous"
+        "unknown": "Unknown"
     },
     "es": {
         "app_title": "Calculadora de peso",
-        "title": "Calculadora de peso basada en presión",
         "pressure": "Presión",
         "weight": "Peso",
         "location": "Ubicación",
@@ -64,12 +57,7 @@ TRANSLATIONS = {
         "point_error": "❌ Error al añadir punto",
         "changes_saved": "✅ Cambios guardados",
         "changes_error": "❌ Error al guardar cambios",
-        "unknown": "Desconocido",
-        "navigation": "Navegación",
-        "page": "Página",
-        "of": "de",
-        "next": "Siguiente",
-        "previous": "Anterior"
+        "unknown": "Desconocido"
     },
     "ru": {
         "app_title": "Калькулятор веса",
@@ -825,53 +813,93 @@ def main(page: ft.Page):
                     on_click=clear_history,
                     style=ft.ButtonStyle(
                         color=ft.colors.WHITE,
-                        bgcolor=ft.colors.RED_400,
+                        bgcolor=ft.colors.RED,
                     ),
-                ),
+                    disabled=True
+                )
             ])
 
-        # Update navigation text
-        navigation_row = ft.Row(
+        total_pages = (total_records + calc.items_per_page - 1) // calc.items_per_page
+
+        table = ft.DataTable(
+            columns=[
+                ft.DataColumn(ft.Text(get_text("date"), size=12)),
+                ft.DataColumn(ft.Text(get_text("pressure"), size=12), numeric=True),
+                ft.DataColumn(ft.Text(get_text("weight"), size=12), numeric=True),
+                ft.DataColumn(ft.Text(get_text("location"), size=12)),
+            ],
+            column_spacing=20,  # Увеличиваем отступ между столбцами
+            horizontal_margin=10,  # Добавляем горизонтальный отступ
+            width=page.width * 0.95 if page.width < 600 else page.width * 0.8,
+            rows=[
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(
+                            ft.Text(
+                                datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").strftime("%m/%d/%Y"),
+                                size=12,
+                                text_align=ft.TextAlign.LEFT,
+                            )
+                        ),
+                        ft.DataCell(
+                            ft.Text(
+                                f"{record[1]:.2f}",
+                                size=12,
+                                text_align=ft.TextAlign.LEFT,
+                            )
+                        ),
+                        ft.DataCell(
+                            ft.Text(
+                                f"{record[2]:.2f}",
+                                size=12,
+                                text_align=ft.TextAlign.LEFT,
+                            )
+                        ),
+                        ft.DataCell(
+                            ft.Container(
+                                content=ft.Text(
+                                    record[3].replace(', ', ',\n'),
+                                    size=12,
+                                    width=page.width * 0.35,
+                                    max_lines=2,
+                                    text_align=ft.TextAlign.LEFT,
+                                    overflow=ft.TextOverflow.ELLIPSIS
+                                ),
+                                padding=ft.padding.symmetric(horizontal=5)  # Уменьшаем отступы
+                            )
+                        ),
+                    ],
+                ) for record in history
+            ],
+        )
+
+        pagination = ft.Row(
             [
                 ft.IconButton(
-                    icon=ft.icons.ARROW_BACK,
+                    ft.icons.ARROW_BACK,
                     on_click=lambda e: change_page(-1),
                     disabled=calc.current_page == 1,
                 ),
-                ft.Text(
-                    f"{get_text('page')} {calc.current_page} {get_text('of')} {(total_records - 1) // calc.items_per_page + 1}"
-                ),
+                ft.Text(f"Страница {calc.current_page} из {total_pages}"),
                 ft.IconButton(
-                    icon=ft.icons.ARROW_FORWARD,
+                    ft.icons.ARROW_FORWARD,
                     on_click=lambda e: change_page(1),
-                    disabled=calc.current_page * calc.items_per_page >= total_records,
+                    disabled=calc.current_page == total_pages,
                 ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         )
 
-        return ft.Column(
-            [
-                ft.Text(
-                    get_text("title"),
-                    size=24,
-                    weight=ft.FontWeight.BOLD,
-                    text_align=ft.TextAlign.CENTER,
-                ),
-                create_data_table(),
-                navigation_row,
-                ft.ElevatedButton(
-                    get_text("clear_history"),
-                    on_click=clear_history,
-                    style=ft.ButtonStyle(
-                        color=ft.colors.WHITE,
-                        bgcolor=ft.colors.RED_400,
-                    ),
-                ),
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20,
+        clear_button = ft.ElevatedButton(
+            get_text("clear_history"),
+            on_click=clear_history,
+            style=ft.ButtonStyle(
+                color=ft.colors.WHITE,
+                bgcolor=ft.colors.RED,
+            )
         )
+
+        return ft.Column([table, pagination, clear_button], spacing=20)
 
     def change_page(delta):
         calc.current_page += delta
@@ -900,20 +928,27 @@ def main(page: ft.Page):
         )
     )
 
-    calculate_button = ft.ElevatedButton(
-        content=ft.Row(
-            [
-                ft.Icon(name=ft.icons.CALCULATE, color=ft.colors.WHITE),
-                ft.Text(get_text("calculate"), color=ft.colors.WHITE, size=16),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
+    calc_button = ft.Container(
+        content=ft.ElevatedButton(
+            content=ft.Row(
+                [
+                    ft.Icon(name=ft.icons.CALCULATE, color=ft.colors.WHITE),
+                    ft.Text(get_text("calculate"), color=ft.colors.WHITE, size=16),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            style=ft.ButtonStyle(
+                color=ft.colors.WHITE,
+                bgcolor=ft.colors.BLUE,
+                padding=20,
+                animation_duration=300,
+                elevation=5,
+                shape=ft.RoundedRectangleBorder(radius=10),
+            ),
+            on_click=calculate_result,
+            width=get_size(400, page.width * 0.9),
         ),
-        width=get_size(400, page.width * 0.9),
-        on_click=calculate_result,
-        style=ft.ButtonStyle(
-            color=ft.colors.WHITE,
-            bgcolor=ft.colors.BLUE,
-        ),
+        margin=ft.margin.only(bottom=20),
     )
 
     chart_container = ft.Container(
@@ -941,7 +976,7 @@ def main(page: ft.Page):
         pressure_input.width = get_size(400, page.width * 0.9)
         weight_input.width = get_size(400, page.width * 0.9)
         add_button.width = get_size(400, page.width * 0.9)
-        calculate_button.width = get_size(400, page.width * 0.9)
+        calc_button.width = get_size(400, page.width * 0.9)
         chart_container.height = get_size(400, 300)
         page.update()
 
@@ -1008,11 +1043,10 @@ def main(page: ft.Page):
                         weight=ft.FontWeight.BOLD,
                         text_align=ft.TextAlign.CENTER
                     ),
-                    ft.Text(get_text("title"), size=get_size(18, 16)), # Added title
                     min_points_msg,
                     ft.Divider(height=20),
                     pressure_input,
-                    calculate_button,
+                    calc_button,
                     result_text,
                     ft.Divider(height=20),
                     calculation_history_text,
