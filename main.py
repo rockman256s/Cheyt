@@ -128,53 +128,171 @@ def main(page: ft.Page):
     page.padding = 10 if page.width < 600 else 20
     page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
 
+    calc = WeightCalculator()
+    editing_mode = False
+    edited_values = {}
+
     def get_size(default, mobile):
         return mobile if page.width < 600 else default
 
-    # Диалог редактирования точки
-    edit_dialog = ft.AlertDialog(
-        modal=True,
-        title=ft.Text("Редактировать точку калибровки"),
-        content=ft.Column(
-            controls=[
-                ft.TextField(label="Давление", keyboard_type=ft.KeyboardType.NUMBER),
-                ft.TextField(label="Вес", keyboard_type=ft.KeyboardType.NUMBER),
-            ],
-            spacing=10,
-        ),
-    )
+    def toggle_edit_mode(e):
+        nonlocal editing_mode
+        editing_mode = not editing_mode
+        if not editing_mode:  # Выход из режима редактирования без сохранения
+            edited_values.clear()
+        update_display()
 
-    def show_edit_dialog(point_id, pressure, weight):
-        def save_changes(e):
-            try:
-                new_pressure = float(edit_dialog.content.controls[0].value)
-                new_weight = float(edit_dialog.content.controls[1].value)
-
-                if calc.edit_point(point_id, new_pressure, new_weight):
-                    result_text.value = "✅ Точка калибровки обновлена"
-                    result_text.color = ft.colors.GREEN
-                    page.dialog = None
-                    update_display()
-                else:
-                    result_text.value = "❌ Ошибка обновления точки"
+    def save_changes(e):
+        nonlocal editing_mode
+        try:
+            for point_id, new_values in edited_values.items():
+                if not calc.edit_point(point_id, new_values['pressure'], new_values['weight']):
+                    result_text.value = "❌ Ошибка сохранения изменений"
                     result_text.color = ft.colors.RED
-                page.update()
-            except ValueError:
-                result_text.value = "❌ Ошибка: введите числовые значения"
-                result_text.color = ft.colors.RED
-                page.update()
+                    page.update()
+                    return
 
-        edit_dialog.content.controls[0].value = str(pressure)
-        edit_dialog.content.controls[1].value = str(weight)
+            result_text.value = "✅ Изменения сохранены"
+            result_text.color = ft.colors.GREEN
+            editing_mode = False
+            edited_values.clear()
+            update_display()
+        except Exception as e:
+            result_text.value = f"❌ Ошибка: {str(e)}"
+            result_text.color = ft.colors.RED
+            page.update()
 
-        edit_dialog.actions = [
-            ft.TextButton("Отмена", on_click=lambda e: setattr(page, 'dialog', None)),
-            ft.TextButton("Сохранить", on_click=save_changes),
-        ]
-        page.dialog = edit_dialog
-        page.update()
+    def on_value_change(e, point_id, field):
+        try:
+            value = float(e.control.value)
+            if point_id not in edited_values:
+                edited_values[point_id] = {
+                    'pressure': next(p[1] for p in calc.calibration_points if p[0] == point_id),
+                    'weight': next(p[2] for p in calc.calibration_points if p[0] == point_id)
+                }
+            edited_values[point_id][field] = value
+        except ValueError:
+            pass
 
-    calc = WeightCalculator()
+    def delete_point(point_id):
+        if calc.delete_point(point_id):
+            result_text.value = "✅ Точка калибровки удалена"
+            result_text.color = ft.colors.GREEN
+            update_display()
+        else:
+            result_text.value = "❌ Ошибка удаления точки"
+            result_text.color = ft.colors.RED
+            page.update()
+
+    def create_data_table():
+        points = calc.load_points()
+        if not points:
+            return ft.Text("Нет калибровочных точек")
+
+        # Заголовок таблицы
+        header = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Text("ID", width=50),
+                    ft.Text("Давление", width=120),
+                    ft.Text("Вес", width=120),
+                    ft.Text("", width=50),  # Для кнопки удаления
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            ),
+            padding=10,
+            border=ft.border.all(1, ft.colors.GREY_400),
+            bgcolor=ft.colors.BLUE_50,
+        )
+
+        rows = [header]
+
+        # Строки данных
+        for point in points:
+            if editing_mode:
+                row = ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text(f"{point[0]}", width=50),
+                            ft.TextField(
+                                value=str(edited_values.get(point[0], {}).get('pressure', point[1])),
+                                width=120,
+                                on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'pressure'),
+                            ),
+                            ft.TextField(
+                                value=str(edited_values.get(point[0], {}).get('weight', point[2])),
+                                width=120,
+                                on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'weight'),
+                            ),
+                            ft.IconButton(
+                                icon=ft.icons.DELETE,
+                                icon_color=ft.colors.RED,
+                                tooltip="Удалить",
+                                on_click=lambda e, pid=point[0]: delete_point(pid)
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    padding=10,
+                    border=ft.border.all(1, ft.colors.GREY_400),
+                )
+            else:
+                row = ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text(f"{point[0]}", width=50),
+                            ft.Text(f"{point[1]:.2f}", width=120),
+                            ft.Text(f"{point[2]:.2f}", width=120),
+                            ft.IconButton(
+                                icon=ft.icons.DELETE,
+                                icon_color=ft.colors.RED,
+                                tooltip="Удалить",
+                                on_click=lambda e, pid=point[0]: delete_point(pid)
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    padding=10,
+                    border=ft.border.all(1, ft.colors.GREY_400),
+                )
+            rows.append(row)
+
+        # Кнопки управления
+        buttons_row = ft.Row(
+            [
+                ft.ElevatedButton(
+                    "Редактировать" if not editing_mode else "Отмена",
+                    on_click=toggle_edit_mode,
+                    style=ft.ButtonStyle(
+                        color=ft.colors.WHITE,
+                        bgcolor=ft.colors.BLUE if not editing_mode else ft.colors.RED,
+                    ),
+                ),
+                ft.ElevatedButton(
+                    "Сохранить",
+                    visible=editing_mode,
+                    on_click=save_changes,
+                    style=ft.ButtonStyle(
+                        color=ft.colors.WHITE,
+                        bgcolor=ft.colors.GREEN,
+                    ),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=10,
+        )
+
+        return ft.Column(
+            controls=[
+                ft.Column(
+                    controls=rows,
+                    scroll=ft.ScrollMode.AUTO,
+                ),
+                buttons_row,
+            ],
+            width=get_size(400, page.width * 0.9),
+            spacing=20,
+        )
 
     pressure_input = ft.TextField(
         label="Давление",
@@ -247,50 +365,6 @@ def main(page: ft.Page):
             print(f"Ошибка при создании графика: {str(e)}")
             return ft.Text("Ошибка при создании графика")
 
-    def create_data_table():
-        points = calc.load_points()
-
-        if not points:
-            return ft.Text("Нет калибровочных точек")
-
-        rows = []
-        for point in points:
-            row = ft.Container(
-                content=ft.Row(
-                    [
-                        ft.Text(f"{point[0]}", width=50),
-                        ft.Text(f"{point[1]:.2f}", width=120),
-                        ft.Text(f"{point[2]:.2f}", width=120),
-                        ft.IconButton(
-                            icon=ft.icons.EDIT,
-                            icon_size=20,
-                            icon_color=ft.colors.BLUE,
-                            tooltip="Редактировать",
-                            on_click=lambda e, p=point: show_edit_dialog(p[0], p[1], p[2])
-                        ),
-                        ft.IconButton(
-                            icon=ft.icons.DELETE,
-                            icon_size=20,
-                            icon_color=ft.colors.RED,
-                            tooltip="Удалить",
-                            on_click=lambda e, pid=point[0]: delete_point(pid)
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-                padding=10,
-                border=ft.border.all(1, ft.colors.GREY_400),
-                border_radius=8,
-                margin=ft.margin.only(bottom=5),
-            )
-            rows.append(row)
-
-        return ft.Column(
-            controls=rows,
-            width=get_size(400, page.width * 0.9),
-            scroll=ft.ScrollMode.AUTO,
-        )
-
     def update_display():
         try:
             chart_container.content = create_chart()
@@ -318,16 +392,6 @@ def main(page: ft.Page):
             page.update()
         except ValueError:
             result_text.value = "❌ Ошибка: введите числовые значения"
-            result_text.color = ft.colors.RED
-            page.update()
-
-    def delete_point(point_id):
-        if calc.delete_point(point_id):
-            result_text.value = "✅ Точка калибровки удалена"
-            result_text.color = ft.colors.GREEN
-            update_display()
-        else:
-            result_text.value = "❌ Ошибка удаления точки"
             result_text.color = ft.colors.RED
             page.update()
 
