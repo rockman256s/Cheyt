@@ -219,7 +219,7 @@ class WeightCalculator:
             c = conn.cursor()
             c.execute("""INSERT INTO weight_history (date, pressure, weight, location)
                         VALUES (?, ?, ?, ?)""",
-                     (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                     (datetime.now().strftime("%m/%d/%Y %H:%M:%S"),
                       pressure, weight, location))
             conn.commit()
             conn.close()
@@ -586,13 +586,13 @@ def main(page: ft.Page):
                 ft.DataColumn(ft.Text("Вес", size=12), numeric=True),
                 ft.DataColumn(ft.Text("Местоположение", size=12)),
             ],
-            column_spacing=5,
-            horizontal_margin=0,
+            column_spacing=20,  # Увеличиваем отступ между столбцами
+            horizontal_margin=10,  # Добавляем горизонтальный отступ
             width=page.width * 0.95 if page.width < 600 else page.width * 0.8,
             rows=[
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(record[0].split()[0], size=12)),  # Только дата
+                        ft.DataCell(ft.Text(datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").strftime("%m/%d/%Y"), size=12)),
                         ft.DataCell(ft.Text(f"{record[1]:.2f}", size=12)),
                         ft.DataCell(ft.Text(f"{record[2]:.2f}", size=12)),
                         ft.DataCell(
@@ -600,12 +600,12 @@ def main(page: ft.Page):
                                 content=ft.Text(
                                     record[3].replace(', ', ',\n'),  # Перенос после запятой
                                     size=12,
-                                    width=page.width * 0.4,
+                                    width=page.width * 0.35,  # Уменьшаем ширину текста местоположения
                                     max_lines=2,
                                     text_align=ft.TextAlign.LEFT,
                                     overflow=ft.TextOverflow.ELLIPSIS
                                 ),
-                                padding=ft.padding.only(right=10)
+                                padding=ft.padding.only(right=20)  # Увеличиваем отступ справа
                             )
                         ),
                     ],
