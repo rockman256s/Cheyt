@@ -90,6 +90,8 @@ class WeightCalculator:
         self.calibration_points = []
         self.db_path = str(Path.home() / "calibration.db")
         self.current_location = get_location_fallback()
+        self.current_page = 1
+        self.items_per_page = 30
         self.init_db()
         self.load_points()
 
@@ -225,21 +227,43 @@ class WeightCalculator:
             print(f"Ошибка сохранения расчета: {str(e)}")
             return False
 
-    def get_calculation_history(self):
-        """Get calculation history"""
+    def get_calculation_history(self, page=1):
+        """Get calculation history with pagination"""
         try:
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
+
+            # Получаем общее количество записей
+            c.execute("SELECT COUNT(*) FROM weight_history")
+            total_records = c.fetchone()[0]
+
+            # Вычисляем смещение для текущей страницы
+            offset = (page - 1) * self.items_per_page
+
             c.execute("""SELECT date, pressure, weight, location 
                         FROM weight_history 
                         ORDER BY date DESC 
-                        LIMIT 50""")
+                        LIMIT ? OFFSET ?""",
+                     (self.items_per_page, offset))
             history = c.fetchall()
             conn.close()
-            return history
+            return history, total_records
         except sqlite3.Error as e:
             print(f"Ошибка получения истории: {str(e)}")
-            return []
+            return [], 0
+
+    def clear_history(self):
+        """Clear calculation history"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute("DELETE FROM weight_history")
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as e:
+            print(f"Ошибка очистки истории: {str(e)}")
+            return False
 
 
 def main(page: ft.Page):
@@ -537,16 +561,29 @@ def main(page: ft.Page):
             page.update()
 
     def create_history_table():
-        history = calc.get_calculation_history()
+        history, total_records = calc.get_calculation_history(calc.current_page)
         if not history:
-            return ft.Text("История расчетов пуста")
+            return ft.Column([
+                ft.Text("История расчетов пуста"),
+                ft.ElevatedButton(
+                    "Очистить историю",
+                    on_click=clear_history,
+                    style=ft.ButtonStyle(
+                        color=ft.colors.WHITE,
+                        bgcolor=ft.colors.RED,
+                    ),
+                    disabled=True
+                )
+            ])
+
+        total_pages = (total_records + calc.items_per_page - 1) // calc.items_per_page
 
         table = ft.DataTable(
             columns=[
                 ft.DataColumn(ft.Text("Дата/Время", size=12)),
                 ft.DataColumn(ft.Text("Давление", size=12)),
                 ft.DataColumn(ft.Text("Вес", size=12)),
-                ft.DataColumn(ft.Text("Местоположение", size=12)),
+                ft.DataColumn(ft.Text("Местоположение", size=12, width=200)),
             ],
             column_spacing=10,
             rows=[
@@ -555,13 +592,63 @@ def main(page: ft.Page):
                         ft.DataCell(ft.Text(record[0], size=12)),
                         ft.DataCell(ft.Text(f"{record[1]:.2f}", size=12)),
                         ft.DataCell(ft.Text(f"{record[2]:.2f}", size=12)),
-                        ft.DataCell(ft.Text(record[3], size=12)),
+                        ft.DataCell(
+                            ft.Text(
+                                record[3],
+                                size=12,
+                                width=200,
+                                max_lines=2,
+                                overflow=ft.TextOverflow.ELLIPSIS
+                            )
+                        ),
                     ],
                 ) for record in history
             ],
         )
-        return table
 
+        pagination = ft.Row(
+            [
+                ft.IconButton(
+                    ft.icons.ARROW_BACK,
+                    on_click=lambda e: change_page(-1),
+                    disabled=calc.current_page == 1,
+                ),
+                ft.Text(f"Страница {calc.current_page} из {total_pages}"),
+                ft.IconButton(
+                    ft.icons.ARROW_FORWARD,
+                    on_click=lambda e: change_page(1),
+                    disabled=calc.current_page == total_pages,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+        )
+
+        clear_button = ft.ElevatedButton(
+            "Очистить историю",
+            on_click=clear_history,
+            style=ft.ButtonStyle(
+                color=ft.colors.WHITE,
+                bgcolor=ft.colors.RED,
+            )
+        )
+
+        return ft.Column([table, pagination, clear_button], spacing=20)
+
+    def change_page(delta):
+        calc.current_page += delta
+        history_container.content = create_history_table()
+        page.update()
+
+    def clear_history(e):
+        if calc.clear_history():
+            result_text.value = "✅ История очищена"
+            result_text.color = ft.colors.GREEN
+            calc.current_page = 1
+            history_container.content = create_history_table()
+        else:
+            result_text.value = "❌ Ошибка очистки истории"
+            result_text.color = ft.colors.RED
+        page.update()
 
     add_button = ft.ElevatedButton(
         "Добавить точку калибровки",
