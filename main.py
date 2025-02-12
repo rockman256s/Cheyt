@@ -542,6 +542,7 @@ def main(page: ft.Page):
 
     page.on_resize = on_resize
 
+    # Обновляем порядок элементов в интерфейсе
     page.add(
         ft.Container(
             content=ft.Column(
@@ -581,8 +582,22 @@ def main(page: ft.Page):
                         size=get_size(20, 16),
                         weight=ft.FontWeight.BOLD
                     ),
+                    ft.Container(
+                        content=ft.Column([
+                            ft.Text(
+                                "Добавить новую точку калибровки:",
+                                size=16,
+                                weight=ft.FontWeight.BOLD
+                            ),
+                            weight_input,
+                            add_button,
+                        ]),
+                        padding=10,
+                        border=ft.border.all(1, ft.colors.GREY_400),
+                        border_radius=10,
+                        margin=ft.margin.only(bottom=20),
+                    ),
                     data_table_container,
-                    add_button,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=10
