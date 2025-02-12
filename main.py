@@ -9,6 +9,82 @@ import requests
 from functools import lru_cache
 import json
 
+@lru_cache(maxsize=1)
+def get_location_fallback():
+    """Fallback to IP-based location if GPS fails"""
+    try:
+        # Используем несколько сервисов с приоритетом точности
+        services = [
+            {
+                'url': 'https://ipapi.co/json/',
+                'priority': 1,
+                'fields': {'city': 'city', 'region': 'region', 'country': 'country_name'}
+            },
+            {
+                'url': 'https://ipwho.is/',
+                'priority': 2,
+                'fields': {'city': 'city', 'region': 'region', 'country': 'country'}
+            },
+            {
+                'url': 'https://ip-api.com/json/',
+                'priority': 3,
+                'fields': {'city': 'city', 'region': 'regionName', 'country': 'country'}
+            }
+        ]
+
+        results = []
+
+        for service in services:
+            try:
+                response = requests.get(
+                    service['url'],
+                    timeout=5,
+                    headers={
+                        'User-Agent': 'Mozilla/5.0',
+                        'Accept': 'application/json'
+                    }
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    location_parts = []
+                    fields = service['fields']
+
+                    # Получаем и проверяем каждую часть адреса
+                    city = data.get(fields['city'])
+                    region = data.get(fields['region'])
+                    country = data.get(fields['country'])
+
+                    # Валидация данных
+                    if city and len(city) > 1 and not city.isdigit():
+                        location_parts.append(city)
+                    if region and len(region) > 1 and not region.isdigit():
+                        location_parts.append(region)
+                    if country and len(country) > 1 and not country.isdigit():
+                        location_parts.append(country)
+
+                    if location_parts:
+                        # Сохраняем результат с приоритетом сервиса
+                        results.append({
+                            'location': ', '.join(location_parts),
+                            'priority': service['priority'],
+                            'parts_count': len(location_parts)
+                        })
+                        print(f"Сервис {service['url']}: получены данные {location_parts}")
+
+            except Exception as e:
+                print(f"Ошибка сервиса {service['url']}: {str(e)}")
+                continue
+
+        if results:
+            # Сортируем результаты по количеству частей адреса и приоритету сервиса
+            results.sort(key=lambda x: (-x['parts_count'], x['priority']))
+            return results[0]['location']
+
+    except Exception as e:
+        print(f"Общая ошибка определения местоположения: {str(e)}")
+    return "Неизвестно"
+
 def get_location_by_gps(page: ft.Page):
     """Get location using HTML5 Geolocation API"""
     try:
@@ -25,6 +101,11 @@ def get_location_by_gps(page: ft.Page):
                     window.invokeFlutterFunction('handleLocationError', {
                         'error': error.message
                     });
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
                 }
             );
         } else {
@@ -40,6 +121,7 @@ def get_location_by_gps(page: ft.Page):
 def get_address_from_coords(lat, lon):
     """Get address from coordinates using Nominatim"""
     try:
+        # Используем OpenStreetMap Nominatim для получения адреса
         response = requests.get(
             f'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json',
             headers={'User-Agent': 'Mozilla/5.0'},
@@ -49,72 +131,23 @@ def get_address_from_coords(lat, lon):
             data = response.json()
             address = data.get('address', {})
             location_parts = []
+
+            # Собираем адрес от более точного к менее точному
             if address.get('city'):
                 location_parts.append(address['city'])
+            elif address.get('town'):
+                location_parts.append(address['town'])
+            elif address.get('village'):
+                location_parts.append(address['village'])
+
             if address.get('state'):
                 location_parts.append(address['state'])
             if address.get('country'):
                 location_parts.append(address['country'])
+
             return ', '.join(location_parts) if location_parts else "Неизвестно"
     except Exception as e:
         print(f"Ошибка получения адреса: {str(e)}")
-    return "Неизвестно"
-
-@lru_cache(maxsize=1)
-def get_location_fallback():
-    """Fallback to IP-based location if GPS fails"""
-    try:
-        # Используем комбинацию нескольких сервисов для более точного определения
-        services = [
-            'https://ipapi.co/json/',
-            'https://ip-api.com/json/',
-            'https://ipwho.is/'
-        ]
-
-        for service_url in services:
-            try:
-                response = requests.get(
-                    service_url,
-                    timeout=5,
-                    headers={'User-Agent': 'Mozilla/5.0'}
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    location_parts = []
-
-                    # ipapi.co format
-                    if 'city' in data:
-                        location_parts.append(data.get('city'))
-                        if data.get('region'):
-                            location_parts.append(data.get('region'))
-                        if data.get('country_name'):
-                            location_parts.append(data.get('country_name'))
-
-                    # ip-api.com format
-                    elif 'regionName' in data:
-                        if data.get('city'):
-                            location_parts.append(data.get('city'))
-                        location_parts.append(data.get('regionName'))
-                        if data.get('country'):
-                            location_parts.append(data.get('country'))
-
-                    # ipwho.is format
-                    elif 'connection' in data:
-                        if data.get('city'):
-                            location_parts.append(data.get('city'))
-                        if data.get('region'):
-                            location_parts.append(data.get('region'))
-                        if data.get('country'):
-                            location_parts.append(data.get('country'))
-
-                    if location_parts:
-                        return ', '.join(location_parts)
-            except Exception as e:
-                print(f"Ошибка сервиса {service_url}: {str(e)}")
-                continue
-
-    except Exception as e:
-        print(f"Ошибка определения местоположения: {str(e)}")
     return "Неизвестно"
 
 class WeightCalculator:
