@@ -3,6 +3,7 @@ import numpy as np
 from scipy import interpolate
 import sqlite3
 import os
+import sys
 from typing import Optional, List, Tuple
 import time
 from flet.security import encrypt, decrypt
@@ -10,12 +11,7 @@ from flet.security import encrypt, decrypt
 class WeightCalculator:
     def __init__(self):
         self.calibration_points = []
-        # Изменение пути к базе данных для Android
-        if ft.platform == "android":
-            from android.storage import app_storage_path
-            self.db_path = os.path.join(app_storage_path(), "calibration.db")
-        else:
-            self.db_path = "calibration.db"
+        self.db_path = "calibration.db"
         self.last_update = 0
         self.update_interval = 0.5  # Секунд между обновлениями
         self.init_db()
@@ -381,18 +377,12 @@ def main(page: ft.Page):
 
 if __name__ == '__main__':
     try:
-        if ft.platform == "android":
-            from android.permissions import request_permissions, Permission
-            request_permissions([
-                Permission.WRITE_EXTERNAL_STORAGE,
-                Permission.READ_EXTERNAL_STORAGE
-            ])
         ft.app(
             target=main,
-            view=ft.AppView.FLET_APP_HIDDEN,
+            view=ft.AppView.WEB_BROWSER,
             assets_dir="assets",
             port=8550,
-            web_renderer="html"
+            web_renderer="canvas"  
         )
     except Exception as e:
         print(f"Critical error: {str(e)}")
