@@ -12,14 +12,7 @@ import json
 def get_client_ip(page: ft.Page) -> str:
     """Get client IP address from Flet page"""
     try:
-        # Получаем IP из заголовков запроса
-        headers = page.client_storage.get('headers', {})
-        ip = headers.get('X-Forwarded-For', '').split(',')[0].strip()
-        if not ip:
-            ip = headers.get('X-Real-IP', '')
-        if not ip:
-            ip = headers.get('Remote-Addr', '')
-        return ip if ip else None
+        return page.client_ip if page.client_ip else None
     except Exception as e:
         print(f"Ошибка получения IP клиента: {str(e)}")
         return None
@@ -47,7 +40,7 @@ def get_location_fallback(client_ip=None):
             }
         ]
 
-        results = []
+        print(f"Определение местоположения для IP: {client_ip}")
 
         for service in services:
             try:
@@ -62,6 +55,7 @@ def get_location_fallback(client_ip=None):
 
                 if response.status_code == 200:
                     data = response.json()
+                    print(f"Ответ от {service['url']}: {data}")
                     location_parts = []
                     fields = service['fields']
 
@@ -79,22 +73,13 @@ def get_location_fallback(client_ip=None):
                         location_parts.append(country)
 
                     if location_parts:
-                        # Сохраняем результат с приоритетом сервиса
-                        results.append({
-                            'location': ', '.join(location_parts),
-                            'priority': service['priority'],
-                            'parts_count': len(location_parts)
-                        })
-                        print(f"Сервис {service['url']}: получены данные {location_parts}")
+                        result = ', '.join(location_parts)
+                        print(f"Определено местоположение: {result}")
+                        return result
 
             except Exception as e:
                 print(f"Ошибка сервиса {service['url']}: {str(e)}")
                 continue
-
-        if results:
-            # Сортируем результаты по количеству частей адреса и приоритету сервиса
-            results.sort(key=lambda x: (-x['parts_count'], x['priority']))
-            return results[0]['location']
 
     except Exception as e:
         print(f"Общая ошибка определения местоположения: {str(e)}")
