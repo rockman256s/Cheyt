@@ -252,8 +252,7 @@ def main(page: ft.Page):
             chart.data_series.append(
                 ft.LineChartData(
                     color=ft.colors.RED,
-                    stroke_width=0,
-                    symbol_size=10,
+                    stroke_width=4,
                     data_points=[
                         ft.LineChartDataPoint(p, w)
                         for p, w in zip(pressures, weights)
@@ -264,7 +263,7 @@ def main(page: ft.Page):
             return chart
         except Exception as e:
             print(f"Ошибка при создании графика: {str(e)}")
-            return ft.Text(f"Ошибка при создании графика: {str(e)}")
+            return ft.Text("Ошибка при создании графика")
 
     # Таблица калибровочных точек
     def create_data_table():
