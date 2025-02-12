@@ -22,6 +22,12 @@ class WeightCalculator:
         conn.commit()
         conn.close()
 
+    def validate_values(self, pressure, weight):
+        """Validate input values"""
+        if pressure < 0 or weight < 0:
+            raise ValueError("Значения давления и веса должны быть положительными")
+        return True
+
     def load_points(self):
         """Load calibration points from database"""
         try:
@@ -37,6 +43,9 @@ class WeightCalculator:
     def add_point(self, pressure, weight):
         """Add new calibration point"""
         try:
+            if not self.validate_values(pressure, weight):
+                return False
+
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
             c.execute("INSERT INTO calibration_points (pressure, weight) VALUES (?, ?)",
@@ -44,7 +53,23 @@ class WeightCalculator:
             conn.commit()
             conn.close()
             return self.load_points()
-        except sqlite3.Error:
+        except (sqlite3.Error, ValueError) as e:
+            return False
+
+    def edit_point(self, point_id, pressure, weight):
+        """Edit existing calibration point"""
+        try:
+            if not self.validate_values(pressure, weight):
+                return False
+
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute("UPDATE calibration_points SET pressure = ?, weight = ? WHERE id = ?",
+                     (pressure, weight, point_id))
+            conn.commit()
+            conn.close()
+            return self.load_points()
+        except (sqlite3.Error, ValueError) as e:
             return False
 
     def delete_point(self, point_id):
@@ -86,9 +111,48 @@ def main(page: ft.Page):
     page.padding = 10 if page.width < 600 else 20
     page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
 
-    # Адаптивный размер для мобильных устройств
-    def get_size(default, mobile):
-        return mobile if page.width < 600 else default
+    # Диалог редактирования точки
+    edit_dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Редактировать точку калибровки"),
+        content=ft.Column(
+            controls=[
+                ft.TextField(label="Давление", keyboard_type=ft.KeyboardType.NUMBER),
+                ft.TextField(label="Вес", keyboard_type=ft.KeyboardType.NUMBER),
+            ],
+            spacing=10,
+        ),
+    )
+
+    def show_edit_dialog(point_id, pressure, weight):
+        edit_dialog.content.controls[0].value = str(pressure)
+        edit_dialog.content.controls[1].value = str(weight)
+
+        def save_changes(e):
+            try:
+                new_pressure = float(edit_dialog.content.controls[0].value)
+                new_weight = float(edit_dialog.content.controls[1].value)
+
+                if calc.edit_point(point_id, new_pressure, new_weight):
+                    result_text.value = "✅ Точка калибровки обновлена"
+                    result_text.color = ft.colors.GREEN
+                    page.dialog = None
+                    update_display()
+                else:
+                    result_text.value = "❌ Ошибка обновления точки"
+                    result_text.color = ft.colors.RED
+                page.update()
+            except ValueError:
+                result_text.value = "❌ Ошибка: введите корректные числовые значения"
+                result_text.color = ft.colors.RED
+                page.update()
+
+        edit_dialog.actions = [
+            ft.TextButton("Отмена", on_click=lambda e: setattr(page, 'dialog', None)),
+            ft.TextButton("Сохранить", on_click=save_changes),
+        ]
+        page.dialog = edit_dialog
+        page.update()
 
     calc = WeightCalculator()
 
@@ -211,12 +275,27 @@ def main(page: ft.Page):
                         ft.DataCell(ft.Text(f"{point[1]:.2f}")),
                         ft.DataCell(ft.Text(f"{point[2]:.2f}")),
                         ft.DataCell(
-                            ft.IconButton(
-                                ft.icons.DELETE,
-                                icon_color=ft.colors.RED_400,
-                                tooltip="Удалить точку",
-                                data=point[0],
-                                on_click=lambda e: delete_point(e.control.data)
+                            ft.Row(
+                                controls=[
+                                    ft.IconButton(
+                                        ft.icons.EDIT,
+                                        icon_color=ft.colors.BLUE,
+                                        tooltip="Редактировать точку",
+                                        data=point,
+                                        on_click=lambda e: show_edit_dialog(
+                                            e.control.data[0],
+                                            e.control.data[1],
+                                            e.control.data[2]
+                                        )
+                                    ),
+                                    ft.IconButton(
+                                        ft.icons.DELETE,
+                                        icon_color=ft.colors.RED_400,
+                                        tooltip="Удалить точку",
+                                        data=point[0],
+                                        on_click=lambda e: delete_point(e.control.data)
+                                    ),
+                                ]
                             )
                         ),
                     ],
@@ -390,6 +469,9 @@ def main(page: ft.Page):
             border_radius=10,
         )
     )
+
+    def get_size(default, mobile):
+        return mobile if page.width < 600 else default
 
 if __name__ == '__main__':
     ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=5000, host="0.0.0.0")
