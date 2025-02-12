@@ -13,26 +13,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "flet_app"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "Flet App"
-
-[[workflows.workflow]]
-name = "flet_app"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python3 main.py"
-waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Flet App"
