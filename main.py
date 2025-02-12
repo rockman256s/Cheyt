@@ -6,6 +6,27 @@ import os
 from pathlib import Path
 from datetime import datetime
 import requests
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def get_location():
+    """Get location info from IP address with caching"""
+    try:
+        response = requests.get('http://ip-api.com/json/?fields=status,message,regionName,city,country', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'success':
+                location_parts = []
+                if data.get('city'):
+                    location_parts.append(data['city'])
+                if data.get('regionName'):
+                    location_parts.append(data['regionName'])
+                if data.get('country'):
+                    location_parts.append(data['country'])
+                return ', '.join(location_parts) if location_parts else "Неизвестно"
+    except (requests.RequestException, KeyError, ValueError):
+        pass
+    return "Неизвестно"
 
 class WeightCalculator:
     def __init__(self):
@@ -135,16 +156,8 @@ class WeightCalculator:
     def save_calculation(self, pressure, weight):
         """Save calculation to history"""
         try:
-            # Получаем местоположение (только штат)
-            location = "Неизвестно"
-            try:
-                response = requests.get('http://ip-api.com/json/')
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get('status') == 'success':
-                        location = data.get('regionName', 'Неизвестно')
-            except:
-                pass
+            # Получаем местоположение с кэшированием
+            location = get_location()
 
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
@@ -295,7 +308,7 @@ def main(page: ft.Page):
                                     tooltip="Удалить точку",
                                     on_click=lambda e, pid=point[0]: delete_point(pid),
                                 ),
-                                margin=ft.margin.only(left=-20),
+                                margin=ft.margin.only(left=-15),
                             ),
                         ],
                         spacing=0,
@@ -318,7 +331,7 @@ def main(page: ft.Page):
                                     tooltip="Удалить точку",
                                     on_click=lambda e, pid=point[0]: delete_point(pid),
                                 ),
-                                margin=ft.margin.only(left=-20),
+                                margin=ft.margin.only(left=-15),
                             ),
                         ],
                         spacing=0,
