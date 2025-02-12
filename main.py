@@ -7,12 +7,69 @@ from pathlib import Path
 from datetime import datetime
 import requests
 from functools import lru_cache
+import json
+
+def get_location_by_gps(page: ft.Page):
+    """Get location using HTML5 Geolocation API"""
+    try:
+        js_code = """
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    window.flutterWebView.send({
+                        'type': 'gps_location',
+                        'lat': lat,
+                        'lon': lon
+                    });
+                },
+                function(error) {
+                    window.flutterWebView.send({
+                        'type': 'gps_error',
+                        'error': error.message
+                    });
+                }
+            );
+        } else {
+            window.flutterWebView.send({
+                'type': 'gps_not_supported'
+            });
+        }
+        """
+        page.web_view.evaluate_javascript(js_code)
+        return True
+    except Exception as e:
+        print(f"Ошибка получения GPS: {str(e)}")
+        return False
+
+def get_address_from_coords(lat, lon):
+    """Get address from coordinates using Nominatim"""
+    try:
+        response = requests.get(
+            f'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json',
+            headers={'User-Agent': 'Mozilla/5.0'},
+            timeout=5
+        )
+        if response.status_code == 200:
+            data = response.json()
+            address = data.get('address', {})
+            location_parts = []
+            if address.get('city'):
+                location_parts.append(address['city'])
+            if address.get('state'):
+                location_parts.append(address['state'])
+            if address.get('country'):
+                location_parts.append(address['country'])
+            return ', '.join(location_parts) if location_parts else "Неизвестно"
+    except Exception as e:
+        print(f"Ошибка получения адреса: {str(e)}")
+    return "Неизвестно"
 
 @lru_cache(maxsize=1)
-def get_location():
-    """Get location info from IP address with caching"""
+def get_location_fallback():
+    """Fallback to IP-based location if GPS fails"""
     try:
-        # Используем IPv6-совместимый endpoint и добавляем больше полей
         response = requests.get(
             'https://ipapi.co/json/',
             timeout=5,
@@ -21,7 +78,6 @@ def get_location():
         if response.status_code == 200:
             data = response.json()
             location_parts = []
-            # Добавляем более детальную информацию о местоположении
             if data.get('city'):
                 location_parts.append(data['city'])
             if data.get('region'):
@@ -30,7 +86,7 @@ def get_location():
                 location_parts.append(data['country_name'])
             if location_parts:
                 return ', '.join(location_parts)
-    except (requests.RequestException, KeyError, ValueError) as e:
+    except Exception as e:
         print(f"Ошибка определения местоположения: {str(e)}")
     return "Неизвестно"
 
@@ -38,6 +94,7 @@ class WeightCalculator:
     def __init__(self):
         self.calibration_points = []
         self.db_path = str(Path.home() / "calibration.db")
+        self.current_location = "Неизвестно"
         self.init_db()
         self.load_points()
 
@@ -47,13 +104,11 @@ class WeightCalculator:
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
 
-            # Таблица калибровочных точек
             c.execute('''CREATE TABLE IF NOT EXISTS calibration_points
                         (id INTEGER PRIMARY KEY AUTOINCREMENT,
                          pressure REAL NOT NULL,
                          weight REAL NOT NULL)''')
 
-            # Таблица истории расчетов
             c.execute('''CREATE TABLE IF NOT EXISTS weight_history
                         (id INTEGER PRIMARY KEY AUTOINCREMENT,
                          date TEXT NOT NULL,
@@ -132,7 +187,6 @@ class WeightCalculator:
             c.execute("DELETE FROM calibration_points WHERE id = ?", (point_id,))
             conn.commit()
             conn.close()
-            # Обновляем список точек после удаления
             self.calibration_points = self.load_points()
             return True
         except sqlite3.Error as e:
@@ -148,7 +202,6 @@ class WeightCalculator:
             pressures = np.array([p[1] for p in self.calibration_points])
             weights = np.array([p[2] for p in self.calibration_points])
 
-            # Линейная интерполяция для 2 точек, квадратичная для >2 точек
             if len(self.calibration_points) == 2:
                 f = interpolate.interp1d(pressures, weights, kind='linear', fill_value='extrapolate')
             else:
@@ -162,8 +215,7 @@ class WeightCalculator:
     def save_calculation(self, pressure, weight):
         """Save calculation to history"""
         try:
-            # Получаем местоположение с кэшированием
-            location = get_location()
+            location = self.current_location
 
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
@@ -213,7 +265,7 @@ def main(page: ft.Page):
     def toggle_edit_mode(e):
         nonlocal editing_mode
         editing_mode = not editing_mode
-        if not editing_mode:  # Выход из режима редактирования без сохранения
+        if not editing_mode:
             edited_values.clear()
         update_display()
 
@@ -264,7 +316,6 @@ def main(page: ft.Page):
         if not points:
             return ft.Text("Нет калибровочных точек")
 
-        # Таблица калибровочных точек
         table = ft.Column(
             controls=[
                 ft.Container(
@@ -273,9 +324,9 @@ def main(page: ft.Page):
                             ft.Text("ID", width=50, size=14),
                             ft.Text("Давление", width=100, size=14),
                             ft.Text("Вес", width=100, size=14),
-                            ft.Text("", width=30),  # Колонка для кнопки удаления
+                            ft.Text("", width=30),
                         ],
-                        spacing=0,  # Убираем spacing между элементами
+                        spacing=0,
                     ),
                     padding=10,
                     bgcolor=ft.colors.BLUE_50,
@@ -284,7 +335,6 @@ def main(page: ft.Page):
             spacing=2,
         )
 
-        # Строки данных
         for point in points:
             if editing_mode:
                 row = ft.Container(
@@ -347,7 +397,6 @@ def main(page: ft.Page):
                 )
             table.controls.append(row)
 
-        # Добавляем кнопки редактирования и сохранения
         buttons = ft.Row(
             [
                 ft.ElevatedButton(
@@ -373,7 +422,6 @@ def main(page: ft.Page):
         keyboard_type=ft.KeyboardType.NUMBER,
     )
 
-    # Создаем отдельные поля ввода для калибровки
     calibration_pressure_input = ft.TextField(
         label="Давление",
         width=get_size(400, page.width * 0.9),
@@ -428,7 +476,6 @@ def main(page: ft.Page):
                 ),
             )
 
-            # Добавляем только одну линию с соответствующей интерполяцией
             chart.data_series.append(
                 ft.LineChartData(
                     color=ft.colors.RED,
@@ -484,7 +531,6 @@ def main(page: ft.Page):
                 calc.save_calculation(pressure, result)
                 result_text.value = f"Расчетный вес: {result:.2f}"
                 result_text.color = ft.colors.BLACK
-                # Обновляем таблицу истории
                 history_container.content = create_history_table()
             else:
                 result_text.value = "Необходимо минимум 2 точки калибровки"
@@ -569,7 +615,6 @@ def main(page: ft.Page):
         padding=10,
     )
 
-    # Контейнер для таблицы истории
     history_container = ft.Container(
         content=create_history_table(),
         padding=10,
@@ -588,7 +633,19 @@ def main(page: ft.Page):
 
     page.on_resize = on_resize
 
-    # Обновляем порядок элементов в интерфейсе
+    def on_view_pop(e):
+        data = json.loads(e.data)
+        if data.get('type') == 'gps_location':
+            lat, lon = data.get('lat'), data.get('lon')
+            calc.current_location = get_address_from_coords(lat, lon)
+        elif data.get('type') in ['gps_error', 'gps_not_supported']:
+            calc.current_location = get_location_fallback()
+        page.update()
+
+    page.on_view_pop = on_view_pop
+
+    get_location_by_gps(page)
+
     page.add(
         ft.Container(
             content=ft.Column(
