@@ -253,46 +253,42 @@ def main(page: ft.Page):
         if not points:
             return ft.Text("Нет калибровочных точек")
 
-        return ft.DataTable(
-            width=get_size(400, page.width * 0.9),
-            border=ft.border.all(1, ft.colors.GREY_400),
-            columns=[
-                ft.DataColumn(ft.Text("ID")),
-                ft.DataColumn(ft.Text("Давление")),
-                ft.DataColumn(ft.Text("Вес")),
-                ft.DataColumn(ft.Text("Действия")),
-            ],
-            rows=[
-                ft.DataRow(
-                    cells=[
-                        ft.DataCell(ft.Text(str(point[0]))),
-                        ft.DataCell(ft.Text(f"{point[1]:.2f}")),
-                        ft.DataCell(ft.Text(f"{point[2]:.2f}")),
-                        ft.DataCell(
-                            ft.Row(
-                                [
-                                    ft.IconButton(
-                                        icon=ft.icons.EDIT,
-                                        icon_size=20,
-                                        icon_color="blue",
-                                        tooltip="Редактировать",
-                                        on_click=lambda e, p=point: show_edit_dialog(p[0], p[1], p[2]),
-                                    ),
-                                    ft.IconButton(
-                                        icon=ft.icons.DELETE,
-                                        icon_size=20,
-                                        icon_color="red",
-                                        tooltip="Удалить",
-                                        on_click=lambda e, pid=point[0]: delete_point(pid),
-                                    ),
-                                ],
-                                spacing=5,
-                            )
+        rows = []
+        for point in points:
+            row = ft.Container(
+                content=ft.Row(
+                    [
+                        ft.Text(f"ID: {point[0]}", width=50),
+                        ft.Text(f"Давление: {point[1]:.2f}", width=120),
+                        ft.Text(f"Вес: {point[2]:.2f}", width=120),
+                        ft.IconButton(
+                            icon=ft.icons.EDIT,
+                            icon_size=20,
+                            icon_color=ft.colors.BLUE,
+                            tooltip="Редактировать",
+                            on_click=lambda e, p=point: show_edit_dialog(p[0], p[1], p[2])
+                        ),
+                        ft.IconButton(
+                            icon=ft.icons.DELETE,
+                            icon_size=20,
+                            icon_color=ft.colors.RED,
+                            tooltip="Удалить",
+                            on_click=lambda e, pid=point[0]: delete_point(pid)
                         ),
                     ],
-                )
-                for point in points
-            ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                padding=10,
+                border=ft.border.all(1, ft.colors.GREY_400),
+                border_radius=8,
+                margin=ft.margin.only(bottom=5),
+            )
+            rows.append(row)
+
+        return ft.Column(
+            controls=rows,
+            width=get_size(400, page.width * 0.9),
+            scroll=ft.ScrollMode.AUTO,
         )
 
     def update_display():
