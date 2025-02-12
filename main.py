@@ -8,6 +8,14 @@ from datetime import datetime
 import requests
 from functools import lru_cache
 import json
+import logging
+
+# Setup detailed logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Add Spanish translations to the TRANSLATIONS dictionary
 TRANSLATIONS = {
@@ -473,621 +481,640 @@ def get_location_fallback(client_ip=None):
     return "Неизвестно"
 
 def main(page: ft.Page):
-    page.title = "Weight Calculator"
-    page.theme_mode = ft.ThemeMode.LIGHT
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.scroll = ft.ScrollMode.AUTO
-    page.padding = 10 if page.width < 600 else 20
-    page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
+    logger.info("Starting application...")
+    try:
+        page.title = "Weight Calculator"
+        page.theme_mode = ft.ThemeMode.LIGHT
+        page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        page.scroll = ft.ScrollMode.AUTO
+        page.padding = 10 if page.width < 600 else 20
+        page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
 
-    calc = WeightCalculator(page)
-    current_language = "en"  # Default language
+        logger.info("Initializing WeightCalculator...")
+        calc = WeightCalculator(page)
+        current_language = "en"  # Default language
 
-    def get_text(key):
-        return TRANSLATIONS.get(current_language, TRANSLATIONS["en"]).get(key, key)
+        def get_text(key):
+            return TRANSLATIONS.get(current_language, TRANSLATIONS["en"]).get(key, key)
 
-    def change_language(e):
-        nonlocal current_language
-        current_language = e.control.value
-        update_texts()
-        update_display()
-
-    # Update the language dropdown options to include Spanish
-    language_dropdown = ft.Dropdown(
-        width=200,
-        options=[
-            ft.dropdown.Option("en", "English"),
-            ft.dropdown.Option("es", "Español"),
-            ft.dropdown.Option("ru", "Русский"),
-            ft.dropdown.Option("uk", "Українська"),
-            ft.dropdown.Option("hi", "हिंदी"),
-            ft.dropdown.Option("mo", "Română"),
-            ft.dropdown.Option("ky", "Кыргызча"),
-            ft.dropdown.Option("uz", "O'zbek"),
-        ],
-        value=current_language,
-        on_change=change_language,
-    )
-
-    def update_texts():
-        page.title = get_text("app_title")
-        pressure_input.label = get_text("pressure")
-        weight_input.label = get_text("weight")
-        result_text.value = ""
-        add_button.text = get_text("add_point")
-        add_calibration_point_text.value = get_text("add_new_point")
-        calculation_history_text.value = get_text("calculation_history")
-        calibration_curve_text.value = get_text("calibration_curve")
-        calibration_points_text.value = get_text("calibration_points")
-        edit_button.text = get_text("edit")
-        save_button.text = get_text("save")
-        clear_history_button.text = get_text("clear_history")
-        min_points_msg.value = get_text("min_points_msg")
-        page.update()
-
-
-    editing_mode = False
-    edited_values = {}
-
-    def get_size(default, mobile):
-        return mobile if page.width < 600 else default
-
-    def toggle_edit_mode(e):
-        nonlocal editing_mode
-        editing_mode = not editing_mode
-        if not editing_mode:
-            edited_values.clear()
-        update_display()
-
-    def save_changes(e):
-        nonlocal editing_mode
-        try:
-            for point_id, new_values in edited_values.items():
-                if not calc.edit_point(point_id, new_values['pressure'], new_values['weight']):
-                    result_text.value = get_text("changes_error")
-                    result_text.color = ft.colors.RED
-                    page.update()
-                    return
-
-            result_text.value = get_text("changes_saved")
-            result_text.color = ft.colors.GREEN
-            editing_mode = False
-            edited_values.clear()
+        def change_language(e):
+            nonlocal current_language
+            current_language = e.control.value
+            update_texts()
             update_display()
-        except Exception as e:
-            result_text.value = f"❌ Error: {str(e)}"
-            result_text.color = ft.colors.RED
-            page.update()
 
-    def on_value_change(e, point_id, field):
-        try:
-            value = float(e.control.value)
-            if point_id not in edited_values:
-                edited_values[point_id] = {
-                    'pressure': next(p[1] for p in calc.calibration_points if p[0] == point_id),
-                    'weight': next(p[2] for p in calc.calibration_points if p[0] == point_id)
-                }
-            edited_values[point_id][field] = value
-        except ValueError:
-            pass
-
-    def delete_point(point_id):
-        if calc.delete_point(point_id):
-            result_text.value = get_text("point_added")
-            result_text.color = ft.colors.GREEN
-            update_display()
-        else:
-            result_text.value = get_text("point_error")
-            result_text.color = ft.colors.RED
-            page.update()
-
-    def create_data_table():
-        points = calc.load_points()
-        if not points:
-            return ft.Text(get_text("point_error"))
-
-        table = ft.Column(
-            controls=[
-                ft.Container(
-                    content=ft.Row(
-                        [
-                            ft.Text(get_text("edit"), width=50, size=14),
-                            ft.Text(get_text("pressure"), width=100, size=14),
-                            ft.Text(get_text("weight"), width=100, size=14),
-                            ft.Text("", width=30),
-                        ],
-                        spacing=0,
-                    ),
-                    padding=10,
-                    bgcolor=ft.colors.BLUE_50,
-                ),
+        # Update the language dropdown options to include Spanish
+        language_dropdown = ft.Dropdown(
+            width=200,
+            options=[
+                ft.dropdown.Option("en", "English"),
+                ft.dropdown.Option("es", "Español"),
+                ft.dropdown.Option("ru", "Русский"),
+                ft.dropdown.Option("uk", "Українська"),
+                ft.dropdown.Option("hi", "हिंदी"),
+                ft.dropdown.Option("mo", "Română"),
+                ft.dropdown.Option("ky", "Кыргызча"),
+                ft.dropdown.Option("uz", "O'zbek"),
             ],
-            spacing=2,
+            value=current_language,
+            on_change=change_language,
         )
 
-        for point in points:
-            if editing_mode:
-                row = ft.Container(
-                    content=ft.Row(
-                        [
-                            ft.Text(f"{point[0]}", width=50, size=14),
-                            ft.TextField(
-                                value=str(edited_values.get(point[0], {}).get('pressure', point[1])),
-                                width=100,
-                                height=40,
-                                text_size=14,
-                                on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'pressure'),
-                            ),
-                            ft.TextField(
-                                value=str(edited_values.get(point[0], {}).get('weight', point[2])),
-                                width=100,
-                                height=40,
-                                text_size=14,
-                                on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'weight'),
-                            ),
-                            ft.Container(
-                                content=ft.IconButton(
-                                    icon=ft.icons.DELETE_FOREVER,
-                                    icon_color=ft.colors.RED_500,
-                                    width=30,
-                                    icon_size=24,
-                                    tooltip=get_text("clear_history"),
-                                    on_click=lambda e, pid=point[0]: delete_point(pid),
-                                ),
-                                margin=ft.margin.only(left=-12),
-                            ),
-                        ],
-                        spacing=0,
-                    ),
-                    padding=5,
-                )
-            else:
-                row = ft.Container(
-                    content=ft.Row(
-                        [
-                            ft.Text(f"{point[0]}", width=50, size=14),
-                            ft.Text(f"{point[1]:.2f}", width=100, size=14),
-                            ft.Text(f"{point[2]:.2f}", width=100, size=14),
-                            ft.Container(
-                                content=ft.IconButton(
-                                    icon=ft.icons.DELETE_FOREVER,
-                                    icon_color=ft.colors.RED_500,
-                                    width=30,
-                                    icon_size=24,
-                                    tooltip=get_text("clear_history"),
-                                    on_click=lambda e, pid=point[0]: delete_point(pid),
-                                ),
-                                margin=ft.margin.only(left=-12),
-                            ),
-
-                        ],
-                        spacing=0,
-                    ),
-                    padding=5,
-                )
-            table.controls.append(row)
-
-        buttons = ft.Row(
-            [
-                ft.ElevatedButton(
-                    get_text("edit") if not editing_mode else get_text("cancel"),
-                    on_click=toggle_edit_mode,
-                ),
-                ft.ElevatedButton(
-                    get_text("save"),
-                    visible=editing_mode,
-                    on_click=save_changes,
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            spacing=10,
-        )
-
-        return ft.Column([table, buttons], spacing=20)
-
-    pressure_input = ft.TextField(
-        label=get_text("pressure"),
-        width=get_size(400, page.width * 0.9),
-        text_align=ft.TextAlign.LEFT,
-        keyboard_type=ft.KeyboardType.NUMBER,
-    )
-
-    calibration_pressure_input = ft.TextField(
-        label=get_text("pressure"),
-        width=get_size(400, page.width * 0.9),
-        text_align=ft.TextAlign.LEFT,
-        keyboard_type=ft.KeyboardType.NUMBER,
-    )
-
-    weight_input = ft.TextField(
-        label=get_text("weight"),
-        width=get_size(400, page.width * 0.9),
-        text_align=ft.TextAlign.LEFT,
-        keyboard_type=ft.KeyboardType.NUMBER,
-    )
-
-    result_text = ft.Text(
-        size=get_size(16, 14),
-        text_align=ft.TextAlign.CENTER,
-        color=ft.colors.BLACK
-    )
-
-    def create_chart():
-        if len(calc.calibration_points) < 2:
-            return ft.Text(get_text("min_points_msg"))
-
-        try:
-            pressures = [p[1] for p in calc.calibration_points]
-            weights = [p[2] for p in calc.calibration_points]
-
-            x_interp = np.linspace(min(pressures), max(pressures), 50)
-
-            if len(calc.calibration_points) == 2:
-                f = interpolate.interp1d(pressures, weights, kind='linear')
-            else:
-                f = interpolate.interp1d(pressures, weights, kind='quadratic')
-
-            y_interp = f(x_interp)
-
-            chart = ft.LineChart(
-                tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.WHITE),
-                expand=True,
-                min_y=min(weights) * 0.9,
-                max_y=max(weights) * 1.1,
-                min_x=min(pressures) * 0.9,
-                max_x=max(pressures) * 1.1,
-                left_axis=ft.ChartAxis(
-                    title=ft.Text(get_text("weight")),
-                    labels_size=50,
-                ),
-                bottom_axis=ft.ChartAxis(
-                    title=ft.Text(get_text("pressure")),
-                    labels_size=50,
-                ),
-            )
-
-            chart.data_series.append(
-                ft.LineChartData(
-                    color=ft.colors.RED,
-                    stroke_width=2,
-                    data_points=[
-                        ft.LineChartDataPoint(x, y)
-                        for x, y in zip(x_interp, y_interp)
-                    ],
-                )
-            )
-
-            return chart
-        except Exception as e:
-            print(f"Ошибка при создании графика: {str(e)}")
-            return ft.Text("Ошибка при создании графика")
-
-    def update_display():
-        try:
-            chart_container.content = create_chart()
-            data_table_container.content = create_data_table()
-            page.update()
-        except Exception as e:
-            result_text.value = f"Ошибка обновления: {str(e)}"
-            result_text.color = ft.colors.RED
+        def update_texts():
+            page.title = get_text("app_title")
+            pressure_input.label = get_text("pressure")
+            weight_input.label = get_text("weight")
+            result_text.value = ""
+            add_button.text = get_text("add_point")
+            add_calibration_point_text.value = get_text("add_new_point")
+            calculation_history_text.value = get_text("calculation_history")
+            calibration_curve_text.value = get_text("calibration_curve")
+            calibration_points_text.value = get_text("calibration_points")
+            edit_button.text = get_text("edit")
+            save_button.text = get_text("save")
+            clear_history_button.text = get_text("clear_history")
+            min_points_msg.value = get_text("min_points_msg")
             page.update()
 
-    def add_calibration_point(e):
-        try:
-            pressure = float(calibration_pressure_input.value)
-            weight = float(weight_input.value)
 
-            if calc.add_point(pressure, weight):
+        editing_mode = False
+        edited_values = {}
+
+        def get_size(default, mobile):
+            return mobile if page.width < 600 else default
+
+        def toggle_edit_mode(e):
+            nonlocal editing_mode
+            editing_mode = not editing_mode
+            if not editing_mode:
+                edited_values.clear()
+            update_display()
+
+        def save_changes(e):
+            nonlocal editing_mode
+            try:
+                for point_id, new_values in edited_values.items():
+                    if not calc.edit_point(point_id, new_values['pressure'], new_values['weight']):
+                        result_text.value = get_text("changes_error")
+                        result_text.color = ft.colors.RED
+                        page.update()
+                        return
+
+                result_text.value = get_text("changes_saved")
+                result_text.color = ft.colors.GREEN
+                editing_mode = False
+                edited_values.clear()
+                update_display()
+            except Exception as e:
+                result_text.value = f"❌ Error: {str(e)}"
+                result_text.color = ft.colors.RED
+                page.update()
+
+        def on_value_change(e, point_id, field):
+            try:
+                value = float(e.control.value)
+                if point_id not in edited_values:
+                    edited_values[point_id] = {
+                        'pressure': next(p[1] for p in calc.calibration_points if p[0] == point_id),
+                        'weight': next(p[2] for p in calc.calibration_points if p[0] == point_id)
+                    }
+                edited_values[point_id][field] = value
+            except ValueError:
+                pass
+
+        def delete_point(point_id):
+            if calc.delete_point(point_id):
                 result_text.value = get_text("point_added")
                 result_text.color = ft.colors.GREEN
-                calibration_pressure_input.value = ""
-                weight_input.value = ""
                 update_display()
             else:
                 result_text.value = get_text("point_error")
                 result_text.color = ft.colors.RED
-            page.update()
-        except ValueError:
-            result_text.value = get_text("error_numeric")
-            result_text.color = ft.colors.RED
-            page.update()
+                page.update()
 
-    def calculate_result(e):
-        try:
-            pressure = float(pressure_input.value)
-            result = calc.calculate_weight(pressure)
+        def create_data_table():
+            points = calc.load_points()
+            if not points:
+                return ft.Text(get_text("point_error"))
 
-            if result is not None:
-                calc.save_calculation(pressure, result)
-                result_text.value = f"Расчетный вес: {result:.2f}"
-                result_text.color = ft.colors.BLACK
-                history_container.content = create_history_table()
-            else:
-                result_text.value = get_text("min_points_msg")
-                result_text.color = ft.colors.RED
-            page.update()
-        except ValueError:
-            result_text.value = get_text("error_numeric")
-            result_text.color = ft.colors.RED
-            page.update()
-
-    def create_history_table():
-        history, total_records = calc.get_calculation_history(calc.current_page)
-        if not history:
-            return ft.Column([
-                ft.Text(get_text("calculation_history")),
-                ft.ElevatedButton(
-                    get_text("clear_history"),
-                    on_click=clear_history,
-                    style=ft.ButtonStyle(
-                        color=ft.colors.WHITE,
-                        bgcolor=ft.colors.RED_400,
+            table = ft.Column(
+                controls=[
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Text(get_text("edit"), width=50, size=14),
+                                ft.Text(get_text("pressure"), width=100, size=14),
+                                ft.Text(get_text("weight"), width=100, size=14),
+                                ft.Text("", width=30),
+                            ],
+                            spacing=0,
+                        ),
+                        padding=10,
+                        bgcolor=ft.colors.BLUE_50,
                     ),
-                ),
-            ])
+                ],
+                spacing=2,
+            )
 
-        table = ft.DataTable(
-            columns=[
-                ft.DataColumn(ft.Text(get_text("date"), size=12)),
-                ft.DataColumn(ft.Text(get_text("pressure"), size=12), numeric=True),
-                ft.DataColumn(ft.Text(get_text("weight"), size=12), numeric=True),
-                ft.DataColumn(ft.Text(get_text("location"), size=12)),
-            ],
-            column_spacing=20,
-            horizontal_margin=10,
-            rows=[
-                ft.DataRow(
-                    cells=[
-                        ft.DataCell(
-                            ft.Text(
-                                datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").strftime("%m/%d/%Y"),
-                                size=12,
-                                text_align=ft.TextAlign.LEFT,
-                            )
-                        ),
-                        ft.DataCell(
-                            ft.Text(
-                                f"{record[1]:.2f}",
-                                size=12,
-                                text_align=ft.TextAlign.LEFT,
-                            )
-                        ),
-                        ft.DataCell(
-                            ft.Text(
-                                f"{record[2]:.2f}",
-                                size=12,
-                                text_align=ft.TextAlign.LEFT,
-                            )
-                        ),
-                        ft.DataCell(
-                            ft.Container(
-                                content=ft.Text(
-                                    record[3].replace(', ', ',\n'),
-                                    size=12,
-                                    width=page.width * 0.35,
-                                    max_lines=2,
-                                    text_align=ft.TextAlign.LEFT,
-                                    overflow=ft.TextOverflow.ELLIPSIS
+            for point in points:
+                if editing_mode:
+                    row = ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Text(f"{point[0]}", width=50, size=14),
+                                ft.TextField(
+                                    value=str(edited_values.get(point[0], {}).get('pressure', point[1])),
+                                    width=100,
+                                    height=40,
+                                    text_size=14,
+                                    on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'pressure'),
                                 ),
-                                padding=ft.padding.symmetric(horizontal=5)
-                            )
+                                ft.TextField(
+                                    value=str(edited_values.get(point[0], {}).get('weight', point[2])),
+                                    width=100,
+                                    height=40,
+                                    text_size=14,
+                                    on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'weight'),
+                                ),
+                                ft.Container(
+                                    content=ft.IconButton(
+                                        icon=ft.icons.DELETE_FOREVER,
+                                        icon_color=ft.colors.RED_500,
+                                        width=30,
+                                        icon_size=24,
+                                        tooltip=get_text("clear_history"),
+                                        on_click=lambda e, pid=point[0]: delete_point(pid),
+                                    ),
+                                    margin=ft.margin.only(left=-12),
+                                ),
+                            ],
+                            spacing=0,
                         ),
-                    ],
-                )
-                for record in history
-            ],
-        )
+                        padding=5,
+                    )
+                else:
+                    row = ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Text(f"{point[0]}", width=50, size=14),
+                                ft.Text(f"{point[1]:.2f}", width=100, size=14),
+                                ft.Text(f"{point[2]:.2f}", width=100, size=14),
+                                ft.Container(
+                                    content=ft.IconButton(
+                                        icon=ft.icons.DELETE_FOREVER,
+                                        icon_color=ft.colors.RED_500,
+                                        width=30,
+                                        icon_size=24,
+                                        tooltip=get_text("clear_history"),
+                                        on_click=lambda e, pid=point[0]: delete_point(pid),
+                                    ),
+                                    margin=ft.margin.only(left=-12),
+                                ),
 
-        total_pages = (total_records + calc.items_per_page - 1) // calc.items_per_page
-        pagination = ft.Row(
-            [
-                ft.IconButton(
-                    ft.icons.ARROW_BACK,
-                    on_click=lambda e: change_page(-1),
-                    disabled=calc.current_page == 1,
-                ),
-                ft.Text(f"{get_text('page')} {calc.current_page}/{total_pages}"),
-                ft.IconButton(
-                    ft.icons.ARROW_FORWARD,
-                    on_click=lambda e: change_page(1),
-                    disabled=calc.current_page == total_pages,
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-        )
+                            ],
+                            spacing=0,
+                        ),
+                        padding=5,
+                    )
+                table.controls.append(row)
 
-        clear_button = ft.ElevatedButton(
-            get_text("clear_history"),
-            on_click=clear_history,
-            style=ft.ButtonStyle(
-                color=ft.colors.WHITE,
-                bgcolor=ft.colors.RED_400,
-            ),
-        )
-
-        return ft.Column([
-            table,
-            ft.Container(content=pagination, margin=ft.margin.symmetric(vertical=20)),
-            ft.Container(content=clear_button, alignment=ft.alignment.center),
-        ])
-
-    def change_page(delta):
-        calc.current_page += delta
-        history_container.content = create_history_table()
-        page.update()
-
-    def clear_history(e):
-        if calc.clear_history():
-            result_text.value = get_text("changes_saved")
-            result_text.color = ft.colors.GREEN
-            calc.current_page = 1
-            history_container.content = create_history_table()
-        else:
-            result_text.value = get_text("changes_error")
-            result_text.color = ft.colors.RED
-        page.update()
-
-    add_button = ft.ElevatedButton(
-        get_text("add_point"),
-        width=get_size(400, page.width * 0.9),
-        on_click=add_calibration_point,
-        style=ft.ButtonStyle(
-            color=ft.colors.WHITE,
-            bgcolor=ft.colors.BLUE,
-            shape=ft.RoundedRectangleBorder(radius=8),
-        )
-    )
-
-    calc_button = ft.Container(
-        content=ft.ElevatedButton(
-            content=ft.Row(
+            buttons = ft.Row(
                 [
-                    ft.Icon(name=ft.icons.CALCULATE, color=ft.colors.WHITE),
-                    ft.Text(get_text("calculate"), color=ft.colors.WHITE, size=16),
+                    ft.ElevatedButton(
+                        get_text("edit") if not editing_mode else get_text("cancel"),
+                        on_click=toggle_edit_mode,
+                    ),
+                    ft.ElevatedButton(
+                        get_text("save"),
+                        visible=editing_mode,
+                        on_click=save_changes,
+                    ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
-            ),
+                spacing=10,
+            )
+
+            return ft.Column([table, buttons], spacing=20)
+
+        pressure_input = ft.TextField(
+            label=get_text("pressure"),
+            width=get_size(400, page.width * 0.9),
+            text_align=ft.TextAlign.LEFT,
+            keyboard_type=ft.KeyboardType.NUMBER,
+        )
+
+        calibration_pressure_input = ft.TextField(
+            label=get_text("pressure"),
+            width=get_size(400, page.width * 0.9),
+            text_align=ft.TextAlign.LEFT,
+            keyboard_type=ft.KeyboardType.NUMBER,
+        )
+
+        weight_input = ft.TextField(
+            label=get_text("weight"),
+            width=get_size(400, page.width * 0.9),
+            text_align=ft.TextAlign.LEFT,
+            keyboard_type=ft.KeyboardType.NUMBER,
+        )
+
+        result_text = ft.Text(
+            size=get_size(16, 14),
+            text_align=ft.TextAlign.CENTER,
+            color=ft.colors.BLACK
+        )
+
+        def create_chart():
+            if len(calc.calibration_points) < 2:
+                return ft.Text(get_text("min_points_msg"))
+
+            try:
+                pressures = [p[1] for p in calc.calibration_points]
+                weights = [p[2] for p in calc.calibration_points]
+
+                x_interp = np.linspace(min(pressures), max(pressures), 50)
+
+                if len(calc.calibration_points) == 2:
+                    f = interpolate.interp1d(pressures, weights, kind='linear')
+                else:
+                    f = interpolate.interp1d(pressures, weights, kind='quadratic')
+
+                y_interp = f(x_interp)
+
+                chart = ft.LineChart(
+                    tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.WHITE),
+                    expand=True,
+                    min_y=min(weights) * 0.9,
+                    max_y=max(weights) * 1.1,
+                    min_x=min(pressures) * 0.9,
+                    max_x=max(pressures) * 1.1,
+                    left_axis=ft.ChartAxis(
+                        title=ft.Text(get_text("weight")),
+                        labels_size=50,
+                    ),
+                    bottom_axis=ft.ChartAxis(
+                        title=ft.Text(get_text("pressure")),
+                        labels_size=50,
+                    ),
+                )
+
+                chart.data_series.append(
+                    ft.LineChartData(
+                        color=ft.colors.RED,
+                        stroke_width=2,
+                        data_points=[
+                            ft.LineChartDataPoint(x, y)
+                            for x, y in zip(x_interp, y_interp)
+                        ],
+                    )
+                )
+
+                return chart
+            except Exception as e:
+                print(f"Ошибка при создании графика: {str(e)}")
+                return ft.Text("Ошибка при создании графика")
+
+        def update_display():
+            try:
+                chart_container.content = create_chart()
+                data_table_container.content = create_data_table()
+                page.update()
+            except Exception as e:
+                result_text.value = f"Ошибка обновления: {str(e)}"
+                result_text.color = ft.colors.RED
+                page.update()
+
+        def add_calibration_point(e):
+            try:
+                pressure = float(calibration_pressure_input.value)
+                weight = float(weight_input.value)
+
+                if calc.add_point(pressure, weight):
+                    result_text.value = get_text("point_added")
+                    result_text.color = ft.colors.GREEN
+                    calibration_pressure_input.value = ""
+                    weight_input.value = ""
+                    update_display()
+                else:
+                    result_text.value = get_text("point_error")
+                    result_text.color = ft.colors.RED
+                page.update()
+            except ValueError:
+                result_text.value = get_text("error_numeric")
+                result_text.color = ft.colors.RED
+                page.update()
+
+        def calculate_result(e):
+            try:
+                pressure = float(pressure_input.value)
+                result = calc.calculate_weight(pressure)
+
+                if result is not None:
+                    calc.save_calculation(pressure, result)
+                    result_text.value = f"Расчетный вес: {result:.2f}"
+                    result_text.color = ft.colors.BLACK
+                    history_container.content = create_history_table()
+                else:
+                    result_text.value = get_text("min_points_msg")
+                    result_text.color = ft.colors.RED
+                page.update()
+            except ValueError:
+                result_text.value = get_text("error_numeric")
+                result_text.color = ft.colors.RED
+                page.update()
+
+        def create_history_table():
+            history, total_records = calc.get_calculation_history(calc.current_page)
+            if not history:
+                return ft.Column([
+                    ft.Text(get_text("calculation_history")),
+                    ft.ElevatedButton(
+                        get_text("clear_history"),
+                        on_click=clear_history,
+                        style=ft.ButtonStyle(
+                            color=ft.colors.WHITE,
+                            bgcolor=ft.colors.RED_400,
+                        ),
+                    ),
+                ])
+
+            table = ft.DataTable(
+                columns=[
+                    ft.DataColumn(ft.Text(get_text("date"), size=12)),
+                    ft.DataColumn(ft.Text(get_text("pressure"), size=12), numeric=True),
+                    ft.DataColumn(ft.Text(get_text("weight"), size=12), numeric=True),
+                    ft.DataColumn(ft.Text(get_text("location"), size=12)),
+                ],
+                column_spacing=20,
+                horizontal_margin=10,
+                rows=[
+                    ft.DataRow(
+                        cells=[
+                            ft.DataCell(
+                                ft.Text(
+                                    datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").strftime("%m/%d/%Y"),
+                                    size=12,
+                                    text_align=ft.TextAlign.LEFT,
+                                )
+                            ),
+                            ft.DataCell(
+                                ft.Text(
+                                    f"{record[1]:.2f}",
+                                    size=12,
+                                    text_align=ft.TextAlign.LEFT,
+                                )
+                            ),
+                            ft.DataCell(
+                                ft.Text(
+                                    f"{record[2]:.2f}",
+                                    size=12,
+                                    text_align=ft.TextAlign.LEFT,
+                                )
+                            ),
+                            ft.DataCell(
+                                ft.Container(
+                                    content=ft.Text(
+                                        record[3].replace(', ', ',\n'),
+                                        size=12,
+                                        width=page.width * 0.35,
+                                        max_lines=2,
+                                        text_align=ft.TextAlign.LEFT,
+                                        overflow=ft.TextOverflow.ELLIPSIS
+                                    ),
+                                    padding=ft.padding.symmetric(horizontal=5)
+                                )
+                            ),
+                        ],
+                    )
+                    for record in history
+                ],
+            )
+
+            total_pages = (total_records + calc.items_per_page - 1) // calc.items_per_page
+            pagination = ft.Row(
+                [
+                    ft.IconButton(
+                        ft.icons.ARROW_BACK,
+                        on_click=lambda e: change_page(-1),
+                        disabled=calc.current_page == 1,
+                    ),
+                    ft.Text(f"{get_text('page')} {calc.current_page}/{total_pages}"),
+                    ft.IconButton(
+                        ft.icons.ARROW_FORWARD,
+                        on_click=lambda e: change_page(1),
+                        disabled=calc.current_page == total_pages,
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            )
+
+            clear_button = ft.ElevatedButton(
+                get_text("clear_history"),
+                on_click=clear_history,
+                style=ft.ButtonStyle(
+                    color=ft.colors.WHITE,
+                    bgcolor=ft.colors.RED_400,
+                ),
+            )
+
+            return ft.Column([
+                table,
+                ft.Container(content=pagination, margin=ft.margin.symmetric(vertical=20)),
+                ft.Container(content=clear_button, alignment=ft.alignment.center),
+            ])
+
+        def change_page(delta):
+            calc.current_page += delta
+            history_container.content = create_history_table()
+            page.update()
+
+        def clear_history(e):
+            if calc.clear_history():
+                result_text.value = get_text("changes_saved")
+                result_text.color = ft.colors.GREEN
+                calc.current_page = 1
+                history_container.content = create_history_table()
+            else:
+                result_text.value = get_text("changes_error")
+                result_text.color = ft.colors.RED
+            page.update()
+
+        add_button = ft.ElevatedButton(
+            get_text("add_point"),
+            width=get_size(400, page.width * 0.9),
+            on_click=add_calibration_point,
             style=ft.ButtonStyle(
                 color=ft.colors.WHITE,
                 bgcolor=ft.colors.BLUE,
-                padding=20,
-                animation_duration=300,
-                elevation=5,
-                shape=ft.RoundedRectangleBorder(radius=10),
-            ),
-            on_click=calculate_result,
-            width=get_size(400, page.width * 0.9),
-        ),
-        margin=ft.margin.only(bottom=20),
-    )
-
-    chart_container = ft.Container(
-        content=create_chart(),
-        height=get_size(400, 300),
-        border=ft.border.all(1, ft.colors.GREY_400),
-        border_radius=10,
-        padding=10,
-    )
-
-    data_table_container = ft.Container(
-        content=create_data_table(),
-        padding=10,
-    )
-
-    history_container = ft.Container(
-        content=create_history_table(),
-        padding=10,
-        border=ft.border.all(1, ft.colors.GREY_400),
-        border_radius=10,
-        margin=ft.margin.only(top=20, bottom=20),
-    )
-
-    def on_resize(e):
-        pressure_input.width = get_size(400, page.width * 0.9)
-        weight_input.width = get_size(400, page.width * 0.9)
-        add_button.width = get_size(400, page.width * 0.9)
-        calc_button.width = get_size(400, page.width * 0.9)
-        chart_container.height = get_size(400, 300)
-        page.update()
-
-    page.on_resize = on_resize
-
-    def on_view_pop(view):
-        try:
-            calc.current_location = get_location_fallback(calc.client_ip)
-            page.update()
-        except Exception as e:
-            print(f"Ошибка обработки местоположения: {str(e)}")
-            calc.current_location = get_location_fallback(calc.client_ip)
-            page.update()
-
-    page.on_view_pop = on_view_pop
-
-
-    add_calibration_point_text = ft.Text(
-        get_text("add_new_point"),
-        size=16,
-        weight=ft.FontWeight.BOLD
-    )
-    calculation_history_text = ft.Text(
-        get_text("calculation_history"),
-        size=get_size(20, 16),
-        weight=ft.FontWeight.BOLD
-    )
-    calibration_curve_text = ft.Text(
-        get_text("calibration_curve"),
-        size=get_size(20, 16),
-        weight=ft.FontWeight.BOLD
-    )
-    calibration_points_text = ft.Text(
-        get_text("calibration_points"),
-        size=get_size(20, 16),
-        weight=ft.FontWeight.BOLD
-    )
-    min_points_msg = ft.Text(
-        get_text("min_points_msg"),
-        size=get_size(16, 14),
-        text_align=ft.TextAlign.CENTER,
-    )
-    edit_button = ft.ElevatedButton(
-        get_text("edit"),
-        on_click=toggle_edit_mode
-    )
-    save_button = ft.ElevatedButton(
-        get_text("save"),
-        visible=editing_mode,
-        on_click=save_changes
-    )
-    clear_history_button = ft.ElevatedButton(
-        get_text("clear_history"),
-        on_click=clear_history
-    )
-
-    page.add(
-        ft.Container(
-            content=ft.Column(
-                controls=[
-                    ft.Text(
-                        get_text("app_title"),
-                        size=get_size(24, 20),
-                        weight=ft.FontWeight.BOLD,
-                        text_align=ft.TextAlign.CENTER
-                    ),
-                    min_points_msg,
-                    ft.Divider(height=20),
-                    pressure_input,
-                    calc_button,
-                    result_text,
-                    ft.Divider(height=20),
-                    calculation_history_text,
-                    history_container,
-                    ft.Divider(height=20),
-                    calibration_curve_text,
-                    chart_container,
-                    ft.Divider(height=20),
-                    calibration_points_text,
-                    ft.Container(
-                        content=ft.Column([
-                            add_calibration_point_text,
-                            calibration_pressure_input,
-                            weight_input,
-                            add_button,
-                        ]),
-                        padding=10,
-                        border=ft.border.all(1, ft.colors.GREY_400),
-                        border_radius=10,
-                        margin=ft.margin.only(bottom=20),
-                    ),
-                    data_table_container,
-                    language_dropdown,
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=10
-            ),
-            padding=10,
-            border_radius=10,
+                shape=ft.RoundedRectangleBorder(radius=8),
+            )
         )
-    )
+
+        calc_button = ft.Container(
+            content=ft.ElevatedButton(
+                content=ft.Row(
+                    [
+                        ft.Icon(name=ft.icons.CALCULATE, color=ft.colors.WHITE),
+                        ft.Text(get_text("calculate"), color=ft.colors.WHITE, size=16),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                style=ft.ButtonStyle(
+                    color=ft.colors.WHITE,
+                    bgcolor=ft.colors.BLUE,
+                    padding=20,
+                    animation_duration=300,
+                    elevation=5,
+                    shape=ft.RoundedRectangleBorder(radius=10),
+                ),
+                on_click=calculate_result,
+                width=get_size(400, page.width * 0.9),
+            ),
+            margin=ft.margin.only(bottom=20),
+        )
+
+        chart_container = ft.Container(
+            content=create_chart(),
+            height=get_size(400, 300),
+            border=ft.border.all(1, ft.colors.GREY_400),
+            border_radius=10,
+            padding=10,
+        )
+
+        data_table_container = ft.Container(
+            content=create_data_table(),
+            padding=10,
+        )
+
+        history_container = ft.Container(
+            content=create_history_table(),
+            padding=10,
+            border=ft.border.all(1, ft.colors.GREY_400),
+            border_radius=10,
+            margin=ft.margin.only(top=20, bottom=20),
+        )
+
+        def on_resize(e):
+            pressure_input.width = get_size(400, page.width * 0.9)
+            weight_input.width = get_size(400, page.width * 0.9)
+            add_button.width = get_size(400, page.width * 0.9)
+            calc_button.width = get_size(400, page.width * 0.9)
+            chart_container.height = get_size(400, 300)
+            page.update()
+
+        page.on_resize = on_resize
+
+        def on_view_pop(view):
+            try:
+                calc.current_location = get_location_fallback(calc.client_ip)
+                page.update()
+            except Exception as e:
+                print(f"Ошибка обработки местоположения: {str(e)}")
+                calc.current_location = get_location_fallback(calc.client_ip)
+                page.update()
+
+        page.on_view_pop = on_view_pop
+
+
+        add_calibration_point_text = ft.Text(
+            get_text("add_new_point"),
+            size=16,
+            weight=ft.FontWeight.BOLD
+        )
+        calculation_history_text = ft.Text(
+            get_text("calculation_history"),
+            size=get_size(20, 16),
+            weight=ft.FontWeight.BOLD
+        )
+        calibration_curve_text = ft.Text(
+            get_text("calibration_curve"),
+            size=get_size(20, 16),
+            weight=ft.FontWeight.BOLD
+        )
+        calibration_points_text = ft.Text(
+            get_text("calibration_points"),
+            size=get_size(20, 16),
+            weight=ft.FontWeight.BOLD
+        )
+        min_points_msg = ft.Text(
+            get_text("min_points_msg"),
+            size=get_size(16, 14),
+            text_align=ft.TextAlign.CENTER,
+        )
+        edit_button = ft.ElevatedButton(
+            get_text("edit"),
+            on_click=toggle_edit_mode
+        )
+        save_button = ft.ElevatedButton(
+            get_text("save"),
+            visible=editing_mode,
+            on_click=save_changes
+        )
+        clear_history_button = ft.ElevatedButton(
+            get_text("clear_history"),
+            on_click=clear_history
+        )
+
+        page.add(
+            ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.Text(
+                            get_text("app_title"),
+                            size=get_size(24, 20),
+                            weight=ft.FontWeight.BOLD,
+                            text_align=ft.TextAlign.CENTER
+                        ),
+                        min_points_msg,
+                        ft.Divider(height=20),
+                        pressure_input,
+                        calc_button,
+                        result_text,
+                        ft.Divider(height=20),
+                        calculation_history_text,
+                        history_container,
+                        ft.Divider(height=20),
+                        calibration_curve_text,
+                        chart_container,
+                        ft.Divider(height=20),
+                        calibration_points_text,
+                        ft.Container(
+                            content=ft.Column([
+                                add_calibration_point_text,
+                                calibration_pressure_input,
+                                weight_input,
+                                add_button,
+                            ]),
+                            padding=10,
+                            border=ft.border.all(1, ft.colors.GREY_400),
+                            border_radius=10,
+                            margin=ft.margin.only(bottom=20),
+                        ),
+                        data_table_container,
+                        language_dropdown,
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=10
+                ),
+                padding=10,
+                border_radius=10,
+            )
+        )
+
+    except Exception as e:
+        logger.error(f"Error in main: {str(e)}")
+        raise
 
 if __name__ == '__main__':
-    ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=5000, host="0.0.0.0")
+    try:
+        logger.info("Starting application...")
+        port = 5000
+        logger.info(f"Starting Flet app on port {port}")
+        ft.app(
+            target=main,
+            view=ft.AppView.WEB_BROWSER,
+            port=port,
+            host="0.0.0.0"
+        )
+    except Exception as e:
+        logger.error(f"Failed to start Flet app: {e}", exc_info=True)
+        raise
