@@ -39,8 +39,7 @@ TRANSLATIONS = {
         "page": "Page",
         "of": "of",
         "next": "Next",
-        "previous": "Previous",
-        "id": "ID"
+        "previous": "Previous"
     },
     "es": {
         "app_title": "Calculadora de peso",
@@ -70,8 +69,7 @@ TRANSLATIONS = {
         "page": "Página",
         "of": "de",
         "next": "Siguiente",
-        "previous": "Anterior",
-        "id": "ID"
+        "previous": "Anterior"
     },
     "ru": {
         "app_title": "Калькулятор веса",
@@ -95,13 +93,7 @@ TRANSLATIONS = {
         "point_error": "❌ Ошибка добавления точки",
         "changes_saved": "✅ Изменения сохранены",
         "changes_error": "❌ Ошибка сохранения изменений",
-        "unknown": "Неизвестно",
-        "navigation": "Навигация",
-        "page": "Страница",
-        "of": "из",
-        "next": "Следующая",
-        "previous": "Предыдущая",
-        "id": "ID"
+        "unknown": "Неизвестно"
     },
     "uk": {
         "app_title": "Калькулятор ваги",
@@ -125,13 +117,7 @@ TRANSLATIONS = {
         "point_error": "❌ Помилка додавання точки",
         "changes_saved": "✅ Зміни збережено",
         "changes_error": "❌ Помилка збереження змін",
-        "unknown": "Невідомо",
-        "navigation": "Навігація",
-        "page": "Сторінка",
-        "of": "із",
-        "next": "Наступна",
-        "previous": "Попередня",
-        "id": "ID"
+        "unknown": "Невідомо"
     },
     "hi": {
         "app_title": "वजन कैलकुलेटर",
@@ -155,13 +141,7 @@ TRANSLATIONS = {
         "point_error": "❌ बिंदु जोड़ने में त्रुटि",
         "changes_saved": "✅ परिवर्तन सहेजे गए",
         "changes_error": "❌ परिवर्तन सहेजने में त्रुटि",
-        "unknown": "अज्ञात",
-        "navigation": "नेविगेशन",
-        "page": "पृष्ठ",
-        "of": "का",
-        "next": "अगला",
-        "previous": "पिछला",
-        "id": "ID"
+        "unknown": "अज्ञात"
     },
     "mo": {
         "app_title": "Calculator de greutate",
@@ -185,13 +165,7 @@ TRANSLATIONS = {
         "point_error": "❌ Eroare la adăugarea punctului",
         "changes_saved": "✅ Modificări salvate",
         "changes_error": "❌ Eroare la salvarea modificărilor",
-        "unknown": "Necunoscut",
-        "navigation": "Navigație",
-        "page": "Pagina",
-        "of": "din",
-        "next": "Următoarea",
-        "previous": "Precedenta",
-        "id": "ID"
+        "unknown": "Necunoscut"
     },
     "ky": {
         "app_title": "Салмак калькулятору",
@@ -215,14 +189,7 @@ TRANSLATIONS = {
         "point_error": "❌ Чекитти кошууда ката кетти",
         "changes_saved": "✅ Өзгөртүүлөр сакталды",
         "changes_error": "❌ Өзгөртүүлөрдү сактоодо ката кетти",
-        "unknown": "Белгисиз",
-        "navigation": "Навигация",
-        "page": "Бет",
-        "of": "тен",
-        "next": "Кийинки",
-        "previous": "Мурунку",
-        "id": "ID"
-
+        "unknown": "Белгисиз"
     },
     "uz": {
         "app_title": "Vazn kalkulyatori",
@@ -246,13 +213,7 @@ TRANSLATIONS = {
         "point_error": "❌ Nuqta qo'shishda xato",
         "changes_saved": "✅ O'zgarishlar saqlandi",
         "changes_error": "❌ O'zgarishlarni saqlashda xato",
-        "unknown": "Noma'lum",
-        "navigation": "Navigatsiya",
-        "page": "Sahifa",
-        "of": "dan",
-        "next": "Keyingi",
-        "previous": "Oldingi",
-        "id": "ID"
+        "unknown": "Noma'lum"
     }
 }
 
@@ -556,13 +517,15 @@ def main(page: ft.Page):
         page.title = get_text("app_title")
         pressure_input.label = get_text("pressure")
         weight_input.label = get_text("weight")
-        calibration_pressure_input.label = get_text("pressure")
-        calculate_button.text = get_text("calculate")
+        result_text.value = ""
         add_button.text = get_text("add_point")
-        clear_history_button.text = get_text("clear_history")
+        add_calibration_point_text.value = get_text("add_new_point")
         calculation_history_text.value = get_text("calculation_history")
         calibration_curve_text.value = get_text("calibration_curve")
         calibration_points_text.value = get_text("calibration_points")
+        edit_button.text = get_text("edit")
+        save_button.text = get_text("save")
+        clear_history_button.text = get_text("clear_history")
         min_points_msg.value = get_text("min_points_msg")
         page.update()
 
@@ -632,7 +595,7 @@ def main(page: ft.Page):
                 ft.Container(
                     content=ft.Row(
                         [
-                            ft.Text(get_text("id"), width=50, size=14),
+                            ft.Text(get_text("edit"), width=50, size=14),
                             ft.Text(get_text("pressure"), width=100, size=14),
                             ft.Text(get_text("weight"), width=100, size=14),
                             ft.Text("", width=30),
@@ -1036,42 +999,49 @@ def main(page: ft.Page):
     )
 
     page.add(
-        ft.Column(
-            [
-                ft.Text(
-                    get_text("app_title"),
-                    size=get_size(24, 20),
-                    weight=ft.FontWeight.BOLD,
-                    text_align=ft.TextAlign.CENTER
-                ),
-                ft.Text(
-                    get_text("title"),
-                    size=get_size(18, 16),
-                    text_align=ft.TextAlign.CENTER
-                ),
-                min_points_msg,
-                ft.Divider(height=20),
-                pressure_input,
-                calculate_button,
-                result_text,
-                ft.Divider(height=20),
-                calculation_history_text,
-                history_container,
-                ft.Divider(height=20),
-                calibration_curve_text,
-                chart_container,
-                ft.Divider(height=20),
-                calibration_points_text,
-                data_table_container,
-                ft.Divider(height=20),
-                add_calibration_point_text,
-                calibration_pressure_input,
-                weight_input,
-                add_button,
-                language_dropdown
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            scroll=ft.ScrollMode.AUTO,
+        ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Text(
+                        get_text("app_title"),
+                        size=get_size(24, 20),
+                        weight=ft.FontWeight.BOLD,
+                        text_align=ft.TextAlign.CENTER
+                    ),
+                    ft.Text(get_text("title"), size=get_size(18, 16)), # Added title
+                    min_points_msg,
+                    ft.Divider(height=20),
+                    pressure_input,
+                    calculate_button,
+                    result_text,
+                    ft.Divider(height=20),
+                    calculation_history_text,
+                    history_container,
+                    ft.Divider(height=20),
+                    calibration_curve_text,
+                    chart_container,
+                    ft.Divider(height=20),
+                    calibration_points_text,
+                    ft.Container(
+                        content=ft.Column([
+                            add_calibration_point_text,
+                            calibration_pressure_input,
+                            weight_input,
+                            add_button,
+                        ]),
+                        padding=10,
+                        border=ft.border.all(1, ft.colors.GREY_400),
+                        border_radius=10,
+                        margin=ft.margin.only(bottom=20),
+                    ),
+                    data_table_container,
+                    language_dropdown,
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=10
+            ),
+            padding=10,
+            border_radius=10,
         )
     )
 
