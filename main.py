@@ -269,28 +269,24 @@ def main(page: ft.Page):
                         ft.DataCell(ft.Text(f"{point[1]:.2f}")),
                         ft.DataCell(ft.Text(f"{point[2]:.2f}")),
                         ft.DataCell(
-                            ft.Container(
-                                content=ft.Row(
-                                    [
-                                        ft.IconButton(
-                                            icon=ft.icons.EDIT,
-                                            icon_size=20,
-                                            icon_color="blue",
-                                            tooltip="Редактировать",
-                                            on_click=lambda e, p=point: show_edit_dialog(p[0], p[1], p[2]),
-                                        ),
-                                        ft.IconButton(
-                                            icon=ft.icons.DELETE,
-                                            icon_size=20,
-                                            icon_color="red",
-                                            tooltip="Удалить",
-                                            on_click=lambda e, pid=point[0]: delete_point(pid),
-                                        ),
-                                    ],
-                                    spacing=5,
-                                    alignment=ft.MainAxisAlignment.CENTER,
-                                ),
-                                padding=5,
+                            ft.Row(
+                                [
+                                    ft.IconButton(
+                                        icon=ft.icons.EDIT,
+                                        icon_size=20,
+                                        icon_color="blue",
+                                        tooltip="Редактировать",
+                                        on_click=lambda e, p=point: show_edit_dialog(p[0], p[1], p[2]),
+                                    ),
+                                    ft.IconButton(
+                                        icon=ft.icons.DELETE,
+                                        icon_size=20,
+                                        icon_color="red",
+                                        tooltip="Удалить",
+                                        on_click=lambda e, pid=point[0]: delete_point(pid),
+                                    ),
+                                ],
+                                spacing=5,
                             )
                         ),
                     ],
