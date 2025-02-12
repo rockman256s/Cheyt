@@ -236,27 +236,14 @@ def main(page: ft.Page):
                 ),
             )
 
-            # Добавляем интерполированную линию
+            # Добавляем только одну линию с соответствующей интерполяцией
             chart.data_series.append(
                 ft.LineChartData(
-                    color=ft.colors.BLUE,
+                    color=ft.colors.RED,
                     stroke_width=2,
                     data_points=[
                         ft.LineChartDataPoint(x, y)
                         for x, y in zip(x_interp, y_interp)
-                    ],
-                )
-            )
-
-            # Добавляем точки калибровки
-            chart.data_series.append(
-                ft.LineChartData(
-                    color=ft.colors.RED,
-                    stroke_width=6,
-                    curve=ft.ChartCurve.NONE,
-                    data_points=[
-                        ft.LineChartDataPoint(p, w)
-                        for p, w in zip(pressures, weights)
                     ],
                 )
             )
