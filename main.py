@@ -189,7 +189,7 @@ def main(page: ft.Page):
         if not points:
             return ft.Text("Нет калибровочных точек")
 
-        # Заголовок таблицы 
+        # Таблица калибровочных точек
         table = ft.Column(
             controls=[
                 ft.Container(
@@ -255,7 +255,6 @@ def main(page: ft.Page):
                 )
             table.controls.append(row)
 
-        # Кнопки управления
         buttons = ft.Row(
             [
                 ft.ElevatedButton(
