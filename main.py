@@ -16,28 +16,22 @@ def get_location_by_gps(page: ft.Page):
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    window.flutterWebView.send({
-                        'type': 'gps_location',
-                        'lat': lat,
-                        'lon': lon
+                    window.invokeFlutterFunction('handleLocation', {
+                        'lat': position.coords.latitude,
+                        'lon': position.coords.longitude
                     });
                 },
                 function(error) {
-                    window.flutterWebView.send({
-                        'type': 'gps_error',
+                    window.invokeFlutterFunction('handleLocationError', {
                         'error': error.message
                     });
                 }
             );
         } else {
-            window.flutterWebView.send({
-                'type': 'gps_not_supported'
-            });
+            window.invokeFlutterFunction('handleLocationNotSupported', {});
         }
         """
-        page.web_view.evaluate_javascript(js_code)
+        page.launch_url(f"javascript:{js_code}")
         return True
     except Exception as e:
         print(f"Ошибка получения GPS: {str(e)}")
@@ -70,22 +64,55 @@ def get_address_from_coords(lat, lon):
 def get_location_fallback():
     """Fallback to IP-based location if GPS fails"""
     try:
-        response = requests.get(
+        # Используем комбинацию нескольких сервисов для более точного определения
+        services = [
             'https://ipapi.co/json/',
-            timeout=5,
-            headers={'User-Agent': 'Mozilla/5.0'}
-        )
-        if response.status_code == 200:
-            data = response.json()
-            location_parts = []
-            if data.get('city'):
-                location_parts.append(data['city'])
-            if data.get('region'):
-                location_parts.append(data['region'])
-            if data.get('country_name'):
-                location_parts.append(data['country_name'])
-            if location_parts:
-                return ', '.join(location_parts)
+            'https://ip-api.com/json/',
+            'https://ipwho.is/'
+        ]
+
+        for service_url in services:
+            try:
+                response = requests.get(
+                    service_url,
+                    timeout=5,
+                    headers={'User-Agent': 'Mozilla/5.0'}
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    location_parts = []
+
+                    # ipapi.co format
+                    if 'city' in data:
+                        location_parts.append(data.get('city'))
+                        if data.get('region'):
+                            location_parts.append(data.get('region'))
+                        if data.get('country_name'):
+                            location_parts.append(data.get('country_name'))
+
+                    # ip-api.com format
+                    elif 'regionName' in data:
+                        if data.get('city'):
+                            location_parts.append(data.get('city'))
+                        location_parts.append(data.get('regionName'))
+                        if data.get('country'):
+                            location_parts.append(data.get('country'))
+
+                    # ipwho.is format
+                    elif 'connection' in data:
+                        if data.get('city'):
+                            location_parts.append(data.get('city'))
+                        if data.get('region'):
+                            location_parts.append(data.get('region'))
+                        if data.get('country'):
+                            location_parts.append(data.get('country'))
+
+                    if location_parts:
+                        return ', '.join(location_parts)
+            except Exception as e:
+                print(f"Ошибка сервиса {service_url}: {str(e)}")
+                continue
+
     except Exception as e:
         print(f"Ошибка определения местоположения: {str(e)}")
     return "Неизвестно"
@@ -633,14 +660,21 @@ def main(page: ft.Page):
 
     page.on_resize = on_resize
 
-    def on_view_pop(e):
-        data = json.loads(e.data)
-        if data.get('type') == 'gps_location':
-            lat, lon = data.get('lat'), data.get('lon')
-            calc.current_location = get_address_from_coords(lat, lon)
-        elif data.get('type') in ['gps_error', 'gps_not_supported']:
+    def on_view_pop(view):
+        try:
+            if hasattr(view, 'data'):
+                data = json.loads(view.data)
+                if 'lat' in data and 'lon' in data:
+                    calc.current_location = get_address_from_coords(data['lat'], data['lon'])
+                else:
+                    calc.current_location = get_location_fallback()
+            else:
+                calc.current_location = get_location_fallback()
+            page.update()
+        except Exception as e:
+            print(f"Ошибка обработки местоположения: {str(e)}")
             calc.current_location = get_location_fallback()
-        page.update()
+            page.update()
 
     page.on_view_pop = on_view_pop
 
