@@ -1,5 +1,8 @@
 {pkgs}: {
   deps = [
+    pkgs.gnumake
+    pkgs.cmake
+    pkgs.flutter
     pkgs.libpng
     pkgs.gtk3
     pkgs.libffi

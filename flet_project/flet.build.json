@@ -1,0 +1,18 @@
+{
+    "app_name": "Weight Calculator",
+    "app_identifier": "com.weightcalc.app",
+    "platforms": ["android"],
+    "version": "1.0.0",
+    "build_number": "1",
+    "android": {
+        "package_name": "com.weightcalc.app",
+        "version_code": "1",
+        "min_sdk_version": "21",
+        "target_sdk_version": "33",
+        "permissions": [
+            "android.permission.INTERNET",
+            "android.permission.WRITE_EXTERNAL_STORAGE",
+            "android.permission.READ_EXTERNAL_STORAGE"
+        ]
+    }
+}

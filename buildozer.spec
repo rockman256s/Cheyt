@@ -26,11 +26,9 @@ android.allow_backup = True
 android.logcat_filters = *:S python:D
 android.copy_libs = 1
 
-# Optimizations
-android.enable_androidx = True
-android.enable_kiosk = False
-android.enable_split_config = true
-android.enable_asset_packs = false
+# Bootstrap configuration
+p4a.bootstrap = webview
+p4a.hook = 
 
 # Build settings
 android.build_mode = debug
