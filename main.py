@@ -251,16 +251,16 @@ def main(page: ft.Page):
                 ft.Container(
                     content=ft.Row(
                         [
-                            ft.Text("ID", width=50),
-                            ft.Text("Давление", width=100),
-                            ft.Text("Вес", width=100),
+                            ft.Text("ID", width=50, size=14),
+                            ft.Text("Давление", width=100, size=14),
+                            ft.Text("Вес", width=100, size=14),
                             ft.Text("", width=30),  # Колонка для кнопки удаления
                         ],
                         spacing=0,  # Убираем spacing между элементами
                     ),
                     padding=10,
                     bgcolor=ft.colors.BLUE_50,
-                )
+                ),
             ],
             spacing=2,
         )
@@ -271,7 +271,7 @@ def main(page: ft.Page):
                 row = ft.Container(
                     content=ft.Row(
                         [
-                            ft.Text(f"{point[0]}", width=50),
+                            ft.Text(f"{point[0]}", width=50, size=14),
                             ft.TextField(
                                 value=str(edited_values.get(point[0], {}).get('pressure', point[1])),
                                 width=100,
@@ -295,10 +295,10 @@ def main(page: ft.Page):
                                     tooltip="Удалить точку",
                                     on_click=lambda e, pid=point[0]: delete_point(pid),
                                 ),
-                                margin=ft.margin.only(left=-20),  # Сдвигаем кнопку на -20px вместо -30px
+                                margin=ft.margin.only(left=-20),
                             ),
                         ],
-                        spacing=0,  # Убираем spacing между элементами
+                        spacing=0,
                     ),
                     padding=5,
                 )
@@ -306,9 +306,9 @@ def main(page: ft.Page):
                 row = ft.Container(
                     content=ft.Row(
                         [
-                            ft.Text(f"{point[0]}", width=50),
-                            ft.Text(f"{point[1]:.2f}", width=100),
-                            ft.Text(f"{point[2]:.2f}", width=100),
+                            ft.Text(f"{point[0]}", width=50, size=14),
+                            ft.Text(f"{point[1]:.2f}", width=100, size=14),
+                            ft.Text(f"{point[2]:.2f}", width=100, size=14),
                             ft.Container(
                                 content=ft.IconButton(
                                     icon=ft.icons.DELETE_FOREVER,
@@ -318,16 +318,33 @@ def main(page: ft.Page):
                                     tooltip="Удалить точку",
                                     on_click=lambda e, pid=point[0]: delete_point(pid),
                                 ),
-                                margin=ft.margin.only(left=-20),  # Сдвигаем кнопку на -20px вместо -30px
+                                margin=ft.margin.only(left=-20),
                             ),
                         ],
-                        spacing=0,  # Убираем spacing между элементами
+                        spacing=0,
                     ),
                     padding=5,
                 )
             table.controls.append(row)
 
-        return table
+        # Добавляем кнопки редактирования и сохранения
+        buttons = ft.Row(
+            [
+                ft.ElevatedButton(
+                    "Редактировать" if not editing_mode else "Отмена",
+                    on_click=toggle_edit_mode,
+                ),
+                ft.ElevatedButton(
+                    "Сохранить",
+                    visible=editing_mode,
+                    on_click=save_changes,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=10,
+        )
+
+        return ft.Column([table, buttons], spacing=20)
 
     pressure_input = ft.TextField(
         label="Давление",
@@ -465,19 +482,19 @@ def main(page: ft.Page):
 
         table = ft.DataTable(
             columns=[
-                ft.DataColumn(ft.Text("Дата/Время", size=14)),
-                ft.DataColumn(ft.Text("Давление", size=14)),
-                ft.DataColumn(ft.Text("Вес", size=14)),
-                ft.DataColumn(ft.Text("Местоположение", size=14)),
+                ft.DataColumn(ft.Text("Дата/Время", size=12)),
+                ft.DataColumn(ft.Text("Давление", size=12)),
+                ft.DataColumn(ft.Text("Вес", size=12)),
+                ft.DataColumn(ft.Text("Местоположение", size=12)),
             ],
-            column_spacing=20,
+            column_spacing=10,
             rows=[
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(record[0], size=14)),
-                        ft.DataCell(ft.Text(f"{record[1]:.2f}", size=14)),
-                        ft.DataCell(ft.Text(f"{record[2]:.2f}", size=14)),
-                        ft.DataCell(ft.Text(record[3], size=14)),
+                        ft.DataCell(ft.Text(record[0], size=12)),
+                        ft.DataCell(ft.Text(f"{record[1]:.2f}", size=12)),
+                        ft.DataCell(ft.Text(f"{record[2]:.2f}", size=12)),
+                        ft.DataCell(ft.Text(record[3], size=12)),
                     ],
                 ) for record in history
             ],
