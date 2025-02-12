@@ -241,7 +241,7 @@ def main(page: ft.Page):
                                     tooltip="Удалить точку",
                                     on_click=lambda e, pid=point[0]: delete_point(pid),
                                 ),
-                                margin=ft.margin.only(left=-30),  # Сдвигаем кнопку влево
+                                margin=ft.margin.only(left=-20),  # Сдвигаем кнопку на -20px вместо -30px
                             ),
                         ],
                         spacing=0,  # Убираем spacing между элементами
@@ -264,7 +264,7 @@ def main(page: ft.Page):
                                     tooltip="Удалить точку",
                                     on_click=lambda e, pid=point[0]: delete_point(pid),
                                 ),
-                                margin=ft.margin.only(left=-30),  # Сдвигаем кнопку влево
+                                margin=ft.margin.only(left=-20),  # Сдвигаем кнопку на -20px вместо -30px
                             ),
                         ],
                         spacing=0,  # Убираем spacing между элементами
@@ -273,23 +273,7 @@ def main(page: ft.Page):
                 )
             table.controls.append(row)
 
-        buttons = ft.Row(
-            [
-                ft.ElevatedButton(
-                    "Редактировать" if not editing_mode else "Отмена",
-                    on_click=toggle_edit_mode,
-                ),
-                ft.ElevatedButton(
-                    "Сохранить",
-                    visible=editing_mode,
-                    on_click=save_changes,
-                ),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            spacing=10,
-        )
-
-        return ft.Column([table, buttons], spacing=20)
+        return table
 
     pressure_input = ft.TextField(
         label="Давление",
