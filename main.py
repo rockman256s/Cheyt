@@ -3,33 +3,42 @@ import numpy as np
 from scipy import interpolate
 import sqlite3
 import os
+from pathlib import Path
 
 class WeightCalculator:
     def __init__(self):
         self.calibration_points = []
-        self.db_path = "calibration.db"
+        # Изменяем путь к базе данных на постоянное хранилище
+        self.db_path = str(Path.home() / "calibration.db")
         self.init_db()
         self.load_points()
 
     def init_db(self):
         """Initialize database with proper schema"""
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
 
-        # Удаляем старую таблицу и создаем новую с полем id
-        c.execute('DROP TABLE IF EXISTS calibration_points')
-        c.execute('''CREATE TABLE calibration_points
-                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                     pressure REAL NOT NULL,
-                     weight REAL NOT NULL)''')
-        conn.commit()
-        conn.close()
+            # Создаем таблицу, если она не существует
+            c.execute('''CREATE TABLE IF NOT EXISTS calibration_points
+                        (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                         pressure REAL NOT NULL,
+                         weight REAL NOT NULL)''')
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as e:
+            print(f"Ошибка инициализации БД: {str(e)}")
 
     def validate_values(self, pressure, weight):
         """Validate input values"""
-        if pressure < 0 or weight < 0:
-            raise ValueError("Значения давления и веса должны быть положительными")
-        return True
+        try:
+            pressure = float(pressure)
+            weight = float(weight)
+            if pressure <= 0 or weight <= 0:
+                return False
+            return True
+        except (ValueError, TypeError):
+            return False
 
     def load_points(self):
         """Load calibration points from database"""
@@ -40,7 +49,8 @@ class WeightCalculator:
             self.calibration_points = c.fetchall()
             conn.close()
             return self.calibration_points
-        except sqlite3.Error:
+        except sqlite3.Error as e:
+            print(f"Ошибка загрузки точек: {str(e)}")
             return []
 
     def add_point(self, pressure, weight):
@@ -56,7 +66,8 @@ class WeightCalculator:
             conn.commit()
             conn.close()
             return self.load_points()
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
+            print(f"Ошибка добавления точки: {str(e)}")
             return False
 
     def edit_point(self, point_id, pressure, weight):
@@ -72,7 +83,8 @@ class WeightCalculator:
             conn.commit()
             conn.close()
             return self.load_points()
-        except (sqlite3.Error, ValueError) as e:
+        except sqlite3.Error as e:
+            print(f"Ошибка редактирования точки: {str(e)}")
             return False
 
     def delete_point(self, point_id):
@@ -84,7 +96,8 @@ class WeightCalculator:
             conn.commit()
             conn.close()
             return self.load_points()
-        except sqlite3.Error:
+        except sqlite3.Error as e:
+            print(f"Ошибка удаления точки: {str(e)}")
             return False
 
     def calculate_weight(self, pressure):
@@ -103,11 +116,11 @@ class WeightCalculator:
                 f = interpolate.interp1d(pressures, weights, kind='quadratic', fill_value='extrapolate')
 
             return float(f(pressure))
-        except:
+        except Exception as e:
+            print(f"Ошибка расчета веса: {str(e)}")
             return None
 
 def main(page: ft.Page):
-    # Настройка страницы для мобильного интерфейса
     page.title = "Прогноз веса"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
@@ -132,9 +145,6 @@ def main(page: ft.Page):
     )
 
     def show_edit_dialog(point_id, pressure, weight):
-        edit_dialog.content.controls[0].value = str(pressure)
-        edit_dialog.content.controls[1].value = str(weight)
-
         def save_changes(e):
             try:
                 new_pressure = float(edit_dialog.content.controls[0].value)
@@ -150,9 +160,12 @@ def main(page: ft.Page):
                     result_text.color = ft.colors.RED
                 page.update()
             except ValueError:
-                result_text.value = "❌ Ошибка: введите корректные числовые значения"
+                result_text.value = "❌ Ошибка: введите числовые значения"
                 result_text.color = ft.colors.RED
                 page.update()
+
+        edit_dialog.content.controls[0].value = str(pressure)
+        edit_dialog.content.controls[1].value = str(weight)
 
         edit_dialog.actions = [
             ft.TextButton("Отмена", on_click=lambda e: setattr(page, 'dialog', None)),
@@ -163,21 +176,6 @@ def main(page: ft.Page):
 
     calc = WeightCalculator()
 
-    # Заголовок - адаптивный размер текста
-    title = ft.Text(
-        "Калькулятор веса на основе давления",
-        size=get_size(24, 20),
-        weight=ft.FontWeight.BOLD,
-        text_align=ft.TextAlign.CENTER
-    )
-
-    description = ft.Text(
-        "Добавьте калибровочные точки (минимум 2) для расчета веса на основе давления.",
-        size=get_size(16, 14),
-        text_align=ft.TextAlign.CENTER,
-    )
-
-    # Поля ввода - адаптивная ширина
     pressure_input = ft.TextField(
         label="Давление",
         width=get_size(400, page.width * 0.9),
@@ -198,7 +196,6 @@ def main(page: ft.Page):
         color=ft.colors.BLACK
     )
 
-    # График калибровки
     def create_chart():
         if len(calc.calibration_points) < 2:
             return ft.Text("Добавьте минимум 2 точки для отображения графика")
@@ -207,10 +204,8 @@ def main(page: ft.Page):
             pressures = [p[1] for p in calc.calibration_points]
             weights = [p[2] for p in calc.calibration_points]
 
-            # Создаем точки для интерполированной кривой
             x_interp = np.linspace(min(pressures), max(pressures), 50)
 
-            # Выбираем тип интерполяции в зависимости от количества точек
             if len(calc.calibration_points) == 2:
                 f = interpolate.interp1d(pressures, weights, kind='linear')
             else:
@@ -218,7 +213,6 @@ def main(page: ft.Page):
 
             y_interp = f(x_interp)
 
-            # График
             chart = ft.LineChart(
                 tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.WHITE),
                 expand=True,
@@ -253,15 +247,13 @@ def main(page: ft.Page):
             print(f"Ошибка при создании графика: {str(e)}")
             return ft.Text("Ошибка при создании графика")
 
-    # Таблица калибровочных точек
     def create_data_table():
-        """Создание таблицы с точками калибровки"""
         points = calc.load_points()
 
         if not points:
             return ft.Text("Нет калибровочных точек")
 
-        table = ft.DataTable(
+        return ft.DataTable(
             columns=[
                 ft.DataColumn(ft.Text("ID")),
                 ft.DataColumn(ft.Text("Давление")),
@@ -278,22 +270,20 @@ def main(page: ft.Page):
                             ft.Row(
                                 controls=[
                                     ft.IconButton(
-                                        ft.icons.EDIT_OUTLINED,
+                                        icon=ft.icons.EDIT_OUTLINED,
                                         icon_color=ft.colors.BLUE,
                                         tooltip="Редактировать",
                                         data=point,
-                                        on_click=lambda e: show_edit_dialog(
-                                            e.control.data[0],
-                                            e.control.data[1],
-                                            e.control.data[2]
+                                        on_click=lambda e, p=point: show_edit_dialog(
+                                            p[0], p[1], p[2]
                                         ),
                                     ),
                                     ft.IconButton(
-                                        ft.icons.DELETE_OUTLINE,
+                                        icon=ft.icons.DELETE_OUTLINE,
                                         icon_color=ft.colors.RED_400,
                                         tooltip="Удалить",
                                         data=point[0],
-                                        on_click=lambda e: delete_point(e.control.data),
+                                        on_click=lambda e, pid=point[0]: delete_point(pid),
                                     ),
                                 ],
                                 alignment=ft.MainAxisAlignment.CENTER,
@@ -304,7 +294,6 @@ def main(page: ft.Page):
                 for point in points
             ],
         )
-        return table
 
     def update_display():
         try:
@@ -330,7 +319,7 @@ def main(page: ft.Page):
             else:
                 result_text.value = "❌ Ошибка добавления точки"
                 result_text.color = ft.colors.RED
-                page.update()
+            page.update()
         except ValueError:
             result_text.value = "❌ Ошибка: введите числовые значения"
             result_text.color = ft.colors.RED
@@ -363,7 +352,6 @@ def main(page: ft.Page):
             result_text.color = ft.colors.RED
             page.update()
 
-    # Кнопки - адаптивная ширина
     add_button = ft.ElevatedButton(
         "Добавить точку калибровки",
         width=get_size(400, page.width * 0.9),
@@ -386,7 +374,6 @@ def main(page: ft.Page):
         )
     )
 
-    # График - адаптивная высота
     chart_container = ft.Container(
         content=create_chart(),
         height=get_size(400, 300),
@@ -400,7 +387,6 @@ def main(page: ft.Page):
         padding=10,
     )
 
-    # Обработка изменения размера окна
     def on_resize(e):
         pressure_input.width = get_size(400, page.width * 0.9)
         weight_input.width = get_size(400, page.width * 0.9)
@@ -411,13 +397,21 @@ def main(page: ft.Page):
 
     page.on_resize = on_resize
 
-    # Добавляем все элементы на страницу
     page.add(
         ft.Container(
             content=ft.Column(
                 controls=[
-                    title,
-                    description,
+                    ft.Text(
+                        "Калькулятор веса на основе давления",
+                        size=get_size(24, 20),
+                        weight=ft.FontWeight.BOLD,
+                        text_align=ft.TextAlign.CENTER
+                    ),
+                    ft.Text(
+                        "Добавьте калибровочные точки (минимум 2) для расчета веса на основе давления.",
+                        size=get_size(16, 14),
+                        text_align=ft.TextAlign.CENTER,
+                    ),
                     ft.Divider(height=20),
                     pressure_input,
                     weight_input,
@@ -426,14 +420,18 @@ def main(page: ft.Page):
                     calc_button,
                     result_text,
                     ft.Divider(height=20),
-                    ft.Text("График калибровочной кривой",
-                           size=get_size(20, 16),
-                           weight=ft.FontWeight.BOLD),
+                    ft.Text(
+                        "График калибровочной кривой",
+                        size=get_size(20, 16),
+                        weight=ft.FontWeight.BOLD
+                    ),
                     chart_container,
                     ft.Divider(height=20),
-                    ft.Text("Таблица калибровочных точек",
-                           size=get_size(20, 16),
-                           weight=ft.FontWeight.BOLD),
+                    ft.Text(
+                        "Таблица калибровочных точек",
+                        size=get_size(20, 16),
+                        weight=ft.FontWeight.BOLD
+                    ),
                     data_table_container,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
