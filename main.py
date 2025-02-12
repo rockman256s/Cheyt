@@ -33,7 +33,8 @@ TRANSLATIONS = {
         "point_error": "❌ Error adding point",
         "changes_saved": "✅ Changes saved",
         "changes_error": "❌ Error saving changes",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "page": "Page"
     },
     "es": {
         "app_title": "Calculadora de peso",
@@ -57,7 +58,8 @@ TRANSLATIONS = {
         "point_error": "❌ Error al añadir punto",
         "changes_saved": "✅ Cambios guardados",
         "changes_error": "❌ Error al guardar cambios",
-        "unknown": "Desconocido"
+        "unknown": "Desconocido",
+        "page": "Página"
     },
     "ru": {
         "app_title": "Калькулятор веса",
@@ -81,7 +83,8 @@ TRANSLATIONS = {
         "point_error": "❌ Ошибка добавления точки",
         "changes_saved": "✅ Изменения сохранены",
         "changes_error": "❌ Ошибка сохранения изменений",
-        "unknown": "Неизвестно"
+        "unknown": "Неизвестно",
+        "page": "Страница"
     },
     "uk": {
         "app_title": "Калькулятор ваги",
@@ -105,7 +108,8 @@ TRANSLATIONS = {
         "point_error": "❌ Помилка додавання точки",
         "changes_saved": "✅ Зміни збережено",
         "changes_error": "❌ Помилка збереження змін",
-        "unknown": "Невідомо"
+        "unknown": "Невідомо",
+        "page": "Сторінка"
     },
     "hi": {
         "app_title": "वजन कैलकुलेटर",
@@ -129,7 +133,8 @@ TRANSLATIONS = {
         "point_error": "❌ बिंदु जोड़ने में त्रुटि",
         "changes_saved": "✅ परिवर्तन सहेजे गए",
         "changes_error": "❌ परिवर्तन सहेजने में त्रुटि",
-        "unknown": "अज्ञात"
+        "unknown": "अज्ञात",
+        "page": "पृष्ठ"
     },
     "mo": {
         "app_title": "Calculator de greutate",
@@ -153,7 +158,8 @@ TRANSLATIONS = {
         "point_error": "❌ Eroare la adăugarea punctului",
         "changes_saved": "✅ Modificări salvate",
         "changes_error": "❌ Eroare la salvarea modificărilor",
-        "unknown": "Necunoscut"
+        "unknown": "Necunoscut",
+        "page": "Pagină"
     },
     "ky": {
         "app_title": "Салмак калькулятору",
@@ -177,7 +183,8 @@ TRANSLATIONS = {
         "point_error": "❌ Чекитти кошууда ката кетти",
         "changes_saved": "✅ Өзгөртүүлөр сакталды",
         "changes_error": "❌ Өзгөртүүлөрдү сактоодо ката кетти",
-        "unknown": "Белгисиз"
+        "unknown": "Белгисиз",
+        "page": "Бет"
     },
     "uz": {
         "app_title": "Vazn kalkulyatori",
@@ -201,7 +208,8 @@ TRANSLATIONS = {
         "point_error": "❌ Nuqta qo'shishda xato",
         "changes_saved": "✅ O'zgarishlar saqlandi",
         "changes_error": "❌ O'zgarishlarni saqlashda xato",
-        "unknown": "Noma'lum"
+        "unknown": "Noma'lum",
+        "page": "Sahifa"
     }
 }
 
@@ -813,13 +821,10 @@ def main(page: ft.Page):
                     on_click=clear_history,
                     style=ft.ButtonStyle(
                         color=ft.colors.WHITE,
-                        bgcolor=ft.colors.RED,
+                        bgcolor=ft.colors.RED_400,
                     ),
-                    disabled=True
-                )
+                ),
             ])
-
-        total_pages = (total_records + calc.items_per_page - 1) // calc.items_per_page
 
         table = ft.DataTable(
             columns=[
@@ -828,9 +833,8 @@ def main(page: ft.Page):
                 ft.DataColumn(ft.Text(get_text("weight"), size=12), numeric=True),
                 ft.DataColumn(ft.Text(get_text("location"), size=12)),
             ],
-            column_spacing=20,  # Увеличиваем отступ между столбцами
-            horizontal_margin=10,  # Добавляем горизонтальный отступ
-            width=page.width * 0.95 if page.width < 600 else page.width * 0.8,
+            column_spacing=20,
+            horizontal_margin=10,
             rows=[
                 ft.DataRow(
                     cells=[
@@ -865,14 +869,16 @@ def main(page: ft.Page):
                                     text_align=ft.TextAlign.LEFT,
                                     overflow=ft.TextOverflow.ELLIPSIS
                                 ),
-                                padding=ft.padding.symmetric(horizontal=5)  # Уменьшаем отступы
+                                padding=ft.padding.symmetric(horizontal=5)
                             )
                         ),
                     ],
-                ) for record in history
+                )
+                for record in history
             ],
         )
 
+        total_pages = (total_records + calc.items_per_page - 1) // calc.items_per_page
         pagination = ft.Row(
             [
                 ft.IconButton(
@@ -880,7 +886,7 @@ def main(page: ft.Page):
                     on_click=lambda e: change_page(-1),
                     disabled=calc.current_page == 1,
                 ),
-                ft.Text(f"Страница {calc.current_page} из {total_pages}"),
+                ft.Text(f"{get_text('page')} {calc.current_page}/{total_pages}"),
                 ft.IconButton(
                     ft.icons.ARROW_FORWARD,
                     on_click=lambda e: change_page(1),
@@ -895,11 +901,15 @@ def main(page: ft.Page):
             on_click=clear_history,
             style=ft.ButtonStyle(
                 color=ft.colors.WHITE,
-                bgcolor=ft.colors.RED,
-            )
+                bgcolor=ft.colors.RED_400,
+            ),
         )
 
-        return ft.Column([table, pagination, clear_button], spacing=20)
+        return ft.Column([
+            table,
+            ft.Container(content=pagination, margin=ft.margin.symmetric(vertical=20)),
+            ft.Container(content=clear_button, alignment=ft.alignment.center),
+        ])
 
     def change_page(delta):
         calc.current_page += delta
