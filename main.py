@@ -85,76 +85,11 @@ def get_location_fallback():
         print(f"Общая ошибка определения местоположения: {str(e)}")
     return "Неизвестно"
 
-def get_location_by_gps(page: ft.Page):
-    """Get location using HTML5 Geolocation API"""
-    try:
-        js_code = """
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    window.invokeFlutterFunction('handleLocation', {
-                        'lat': position.coords.latitude,
-                        'lon': position.coords.longitude
-                    });
-                },
-                function(error) {
-                    window.invokeFlutterFunction('handleLocationError', {
-                        'error': error.message
-                    });
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                }
-            );
-        } else {
-            window.invokeFlutterFunction('handleLocationNotSupported', {});
-        }
-        """
-        page.launch_url(f"javascript:{js_code}")
-        return True
-    except Exception as e:
-        print(f"Ошибка получения GPS: {str(e)}")
-        return False
-
-def get_address_from_coords(lat, lon):
-    """Get address from coordinates using Nominatim"""
-    try:
-        # Используем OpenStreetMap Nominatim для получения адреса
-        response = requests.get(
-            f'https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json',
-            headers={'User-Agent': 'Mozilla/5.0'},
-            timeout=5
-        )
-        if response.status_code == 200:
-            data = response.json()
-            address = data.get('address', {})
-            location_parts = []
-
-            # Собираем адрес от более точного к менее точному
-            if address.get('city'):
-                location_parts.append(address['city'])
-            elif address.get('town'):
-                location_parts.append(address['town'])
-            elif address.get('village'):
-                location_parts.append(address['village'])
-
-            if address.get('state'):
-                location_parts.append(address['state'])
-            if address.get('country'):
-                location_parts.append(address['country'])
-
-            return ', '.join(location_parts) if location_parts else "Неизвестно"
-    except Exception as e:
-        print(f"Ошибка получения адреса: {str(e)}")
-    return "Неизвестно"
-
 class WeightCalculator:
     def __init__(self):
         self.calibration_points = []
         self.db_path = str(Path.home() / "calibration.db")
-        self.current_location = "Неизвестно"
+        self.current_location = get_location_fallback()
         self.init_db()
         self.load_points()
 
@@ -695,14 +630,7 @@ def main(page: ft.Page):
 
     def on_view_pop(view):
         try:
-            if hasattr(view, 'data'):
-                data = json.loads(view.data)
-                if 'lat' in data and 'lon' in data:
-                    calc.current_location = get_address_from_coords(data['lat'], data['lon'])
-                else:
-                    calc.current_location = get_location_fallback()
-            else:
-                calc.current_location = get_location_fallback()
+            calc.current_location = get_location_fallback()
             page.update()
         except Exception as e:
             print(f"Ошибка обработки местоположения: {str(e)}")
@@ -711,7 +639,6 @@ def main(page: ft.Page):
 
     page.on_view_pop = on_view_pop
 
-    get_location_by_gps(page)
 
     page.add(
         ft.Container(
