@@ -2,7 +2,7 @@
     "app_name": "Weight Calculator",
     "app_identifier": "com.weightcalc.app",
     "platforms": ["android"],
-    "version": "1.0.0",
+    "version": "1.0.0.13",
     "build_number": "1",
     "android": {
         "package_name": "com.weightcalc.app",

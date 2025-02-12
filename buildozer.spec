@@ -5,7 +5,7 @@ package.domain = org.weightcalc
 source.dir = flet_project
 source.include_exts = py,png,jpg,kv,atlas,db,toml,json
 source.exclude_dirs = tests, bin, venv, .git
-version = 1.0.0.3
+version = 1.0.0.13
 
 requirements = python3,\
     flet==0.19.0,\
