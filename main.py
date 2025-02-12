@@ -190,22 +190,22 @@ def main(page: ft.Page):
             return ft.Text("Нет калибровочных точек")
 
         # Заголовок таблицы
-        header = ft.Container(
-            content=ft.Row(
-                [
-                    ft.Text("ID", width=50),
-                    ft.Text("Давление", width=120),
-                    ft.Text("Вес", width=120),
-                    ft.Text("", width=50),  # Для кнопки удаления
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            ),
-            padding=10,
-            border=ft.border.all(1, ft.colors.GREY_400),
-            bgcolor=ft.colors.BLUE_50,
+        table = ft.Column(
+            controls=[
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("ID", width=50),
+                            ft.Text("Давление", width=120),
+                            ft.Text("Вес", width=120),
+                        ],
+                    ),
+                    padding=10,
+                    bgcolor=ft.colors.BLUE_50,
+                )
+            ],
+            spacing=2,
         )
-
-        rows = [header]
 
         # Строки данных
         for point in points:
@@ -217,24 +217,25 @@ def main(page: ft.Page):
                             ft.TextField(
                                 value=str(edited_values.get(point[0], {}).get('pressure', point[1])),
                                 width=120,
+                                height=40,
+                                text_size=14,
                                 on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'pressure'),
                             ),
                             ft.TextField(
                                 value=str(edited_values.get(point[0], {}).get('weight', point[2])),
                                 width=120,
+                                height=40,
+                                text_size=14,
                                 on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'weight'),
                             ),
                             ft.IconButton(
                                 icon=ft.icons.DELETE,
                                 icon_color=ft.colors.RED,
-                                tooltip="Удалить",
                                 on_click=lambda e, pid=point[0]: delete_point(pid)
                             ),
                         ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
-                    padding=10,
-                    border=ft.border.all(1, ft.colors.GREY_400),
+                    padding=5,
                 )
             else:
                 row = ft.Container(
@@ -246,53 +247,32 @@ def main(page: ft.Page):
                             ft.IconButton(
                                 icon=ft.icons.DELETE,
                                 icon_color=ft.colors.RED,
-                                tooltip="Удалить",
                                 on_click=lambda e, pid=point[0]: delete_point(pid)
                             ),
                         ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
-                    padding=10,
-                    border=ft.border.all(1, ft.colors.GREY_400),
+                    padding=5,
                 )
-            rows.append(row)
+            table.controls.append(row)
 
         # Кнопки управления
-        buttons_row = ft.Row(
+        buttons = ft.Row(
             [
                 ft.ElevatedButton(
                     "Редактировать" if not editing_mode else "Отмена",
                     on_click=toggle_edit_mode,
-                    style=ft.ButtonStyle(
-                        color=ft.colors.WHITE,
-                        bgcolor=ft.colors.BLUE if not editing_mode else ft.colors.RED,
-                    ),
                 ),
                 ft.ElevatedButton(
                     "Сохранить",
                     visible=editing_mode,
                     on_click=save_changes,
-                    style=ft.ButtonStyle(
-                        color=ft.colors.WHITE,
-                        bgcolor=ft.colors.GREEN,
-                    ),
                 ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=10,
         )
 
-        return ft.Column(
-            controls=[
-                ft.Column(
-                    controls=rows,
-                    scroll=ft.ScrollMode.AUTO,
-                ),
-                buttons_row,
-            ],
-            width=get_size(400, page.width * 0.9),
-            spacing=20,
-        )
+        return ft.Column([table, buttons], spacing=20)
 
     pressure_input = ft.TextField(
         label="Давление",
