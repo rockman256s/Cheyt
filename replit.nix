@@ -1,13 +1,5 @@
 {pkgs}: {
   deps = [
-    pkgs.rustc
-    pkgs.openssl
-    pkgs.libiconv
-    pkgs.cargo
-    pkgs.atk
-    pkgs.harfbuzz
-    pkgs.gdk-pixbuf
-    pkgs.pango
     pkgs.libpng
     pkgs.gtk3
     pkgs.libffi
