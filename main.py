@@ -196,8 +196,9 @@ def main(page: ft.Page):
                     content=ft.Row(
                         [
                             ft.Text("ID", width=50),
-                            ft.Text("Давление", width=120),
-                            ft.Text("Вес", width=120),
+                            ft.Text("Давление", width=100),
+                            ft.Text("Вес", width=100),
+                            ft.Text("", width=40),  # Пустая колонка для кнопки удаления
                         ],
                     ),
                     padding=10,
@@ -216,14 +217,14 @@ def main(page: ft.Page):
                             ft.Text(f"{point[0]}", width=50),
                             ft.TextField(
                                 value=str(edited_values.get(point[0], {}).get('pressure', point[1])),
-                                width=120,
+                                width=100,
                                 height=40,
                                 text_size=14,
                                 on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'pressure'),
                             ),
                             ft.TextField(
                                 value=str(edited_values.get(point[0], {}).get('weight', point[2])),
-                                width=120,
+                                width=100,
                                 height=40,
                                 text_size=14,
                                 on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'weight'),
@@ -231,6 +232,7 @@ def main(page: ft.Page):
                             ft.IconButton(
                                 icon=ft.icons.DELETE,
                                 icon_color=ft.colors.RED,
+                                width=40,
                                 on_click=lambda e, pid=point[0]: delete_point(pid)
                             ),
                         ],
@@ -242,11 +244,12 @@ def main(page: ft.Page):
                     content=ft.Row(
                         [
                             ft.Text(f"{point[0]}", width=50),
-                            ft.Text(f"{point[1]:.2f}", width=120),
-                            ft.Text(f"{point[2]:.2f}", width=120),
+                            ft.Text(f"{point[1]:.2f}", width=100),
+                            ft.Text(f"{point[2]:.2f}", width=100),
                             ft.IconButton(
                                 icon=ft.icons.DELETE,
                                 icon_color=ft.colors.RED,
+                                width=40,
                                 on_click=lambda e, pid=point[0]: delete_point(pid)
                             ),
                         ],
