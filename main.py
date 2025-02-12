@@ -97,7 +97,7 @@ class WeightCalculator:
             conn.close()
             # Обновляем список точек после удаления
             self.calibration_points = self.load_points()
-            update_display()
+            return True
         except sqlite3.Error as e:
             print(f"Ошибка удаления точки: {str(e)}")
             return False
@@ -200,7 +200,7 @@ def main(page: ft.Page):
                             ft.Text("ID", width=50),
                             ft.Text("Давление", width=100),
                             ft.Text("Вес", width=100),
-                            ft.Text("", width=30),  # Уменьшенная колонка для кнопки удаления
+                            ft.Text("", width=30),  # Колонка для кнопки удаления
                         ],
                     ),
                     padding=10,
@@ -232,11 +232,12 @@ def main(page: ft.Page):
                                 on_change=lambda e, pid=point[0]: on_value_change(e, pid, 'weight'),
                             ),
                             ft.IconButton(
-                                icon=ft.icons.DELETE,
-                                icon_color=ft.colors.RED,
+                                icon=ft.icons.DELETE_FOREVER,
+                                icon_color=ft.colors.RED_500,
                                 width=30,
-                                icon_size=20,
-                                on_click=lambda pid=point[0]: delete_point(pid),
+                                icon_size=24,
+                                tooltip="Удалить точку",
+                                on_click=lambda e, pid=point[0]: delete_point(pid),
                             ),
                         ],
                     ),
@@ -250,11 +251,12 @@ def main(page: ft.Page):
                             ft.Text(f"{point[1]:.2f}", width=100),
                             ft.Text(f"{point[2]:.2f}", width=100),
                             ft.IconButton(
-                                icon=ft.icons.DELETE,
-                                icon_color=ft.colors.RED,
+                                icon=ft.icons.DELETE_FOREVER,
+                                icon_color=ft.colors.RED_500,
                                 width=30,
-                                icon_size=20,
-                                on_click=lambda pid=point[0]: delete_point(pid),
+                                icon_size=24,
+                                tooltip="Удалить точку",
+                                on_click=lambda e, pid=point[0]: delete_point(pid),
                             ),
                         ],
                     ),
