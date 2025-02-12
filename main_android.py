@@ -19,8 +19,11 @@ import numpy as np
 from scipy import interpolate
 import logging
 
-# Setup logging
-logging.basicConfig(level=logging.DEBUG)
+# Setup detailed logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 class WeightCalculatorApp(App):
@@ -40,88 +43,116 @@ class WeightCalculatorApp(App):
         if platform != 'android':
             Window.size = (400, 600)
 
-        # Create main layout
-        layout = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+        # Create main layout with padding and spacing
+        layout = BoxLayout(
+            orientation='vertical',
+            padding=[dp(20), dp(10), dp(20), dp(10)],  # left, top, right, bottom
+            spacing=dp(15)
+        )
 
-        # Title
+        # Title with improved styling
         title = Label(
             text='Калькулятор веса',
             size_hint_y=None,
-            height=dp(50),
-            font_size=dp(24)
+            height=dp(60),
+            font_size=dp(24),
+            bold=True
         )
         layout.add_widget(title)
 
-        # Calibration inputs
-        cal_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(200))
+        # Calibration inputs section
+        cal_layout = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=dp(220),
+            spacing=dp(10)
+        )
 
-        # Pressure input
+        # Pressure input with improved styling
         pressure_label = Label(
             text='Давление:',
             size_hint_y=None,
-            height=dp(30)
+            height=dp(30),
+            halign='left'
         )
         self.pressure_input = TextInput(
             multiline=False,
             input_type='number',
             size_hint_y=None,
-            height=dp(40)
+            height=dp(45),
+            padding=[dp(10), dp(10), dp(10), dp(10)]
         )
 
-        # Weight input
+        # Weight input with improved styling
         weight_label = Label(
             text='Вес:',
             size_hint_y=None,
-            height=dp(30)
+            height=dp(30),
+            halign='left'
         )
         self.weight_input = TextInput(
             multiline=False,
             input_type='number',
             size_hint_y=None,
-            height=dp(40)
+            height=dp(45),
+            padding=[dp(10), dp(10), dp(10), dp(10)]
         )
 
-        # Add calibration point button
+        # Add calibration point button with improved styling
         add_button = Button(
             text='Добавить точку калибровки',
             size_hint_y=None,
-            height=dp(40),
-            background_color=(0.2, 0.6, 1, 1)
+            height=dp(50),
+            background_color=(0.2, 0.6, 1, 1),
+            font_size=dp(16)
         )
         add_button.bind(on_press=self.add_point)
 
+        # Add widgets to calibration layout
         cal_layout.add_widget(pressure_label)
         cal_layout.add_widget(self.pressure_input)
         cal_layout.add_widget(weight_label)
         cal_layout.add_widget(self.weight_input)
         cal_layout.add_widget(add_button)
 
-        # Weight calculation
-        calc_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(150))
+        # Weight calculation section with improved styling
+        calc_layout = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=dp(170),
+            spacing=dp(10)
+        )
+
         calc_label = Label(
             text='Введите давление для расчета:',
             size_hint_y=None,
-            height=dp(30)
+            height=dp(30),
+            halign='left'
         )
         self.calc_input = TextInput(
             multiline=False,
             input_type='number',
             size_hint_y=None,
-            height=dp(40)
+            height=dp(45),
+            padding=[dp(10), dp(10), dp(10), dp(10)]
         )
         calc_button = Button(
             text='Рассчитать вес',
             size_hint_y=None,
-            height=dp(40),
-            background_color=(0.2, 0.6, 1, 1)
+            height=dp(50),
+            background_color=(0.2, 0.6, 1, 1),
+            font_size=dp(16)
         )
         calc_button.bind(on_press=self.calculate_weight)
+
         self.result_label = Label(
             text='',
             size_hint_y=None,
-            height=dp(40)
+            height=dp(45),
+            font_size=dp(16)
         )
 
+        # Add widgets to calculation layout
         calc_layout.add_widget(calc_label)
         calc_layout.add_widget(self.calc_input)
         calc_layout.add_widget(calc_button)
@@ -132,7 +163,11 @@ class WeightCalculatorApp(App):
         layout.add_widget(calc_layout)
 
         # Initialize database
-        self.init_db()
+        try:
+            self.init_db()
+        except Exception as e:
+            logger.error(f"Failed to initialize database: {e}")
+            self.result_label.text = "Ошибка инициализации базы данных"
 
         return layout
 
