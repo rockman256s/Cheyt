@@ -2,8 +2,8 @@
 title = Weight Calculator
 package.name = weightcalculator
 package.domain = org.weightcalc
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,db,toml
+source.dir = flet_project
+source.include_exts = py,png,jpg,kv,atlas,db,toml,json
 source.exclude_dirs = tests, bin, venv, .git
 version = 1.0.0.3
 
@@ -12,7 +12,8 @@ requirements = python3,\
     flet-core==0.19.0,\
     numpy==1.26.0,\
     scipy==1.11.3,\
-    pillow>=10.0.1
+    pillow>=10.0.1,\
+    requests
 
 # Android specific
 android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE

@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.python3
     pkgs.gnumake
     pkgs.cmake
     pkgs.flutter
