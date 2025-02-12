@@ -111,6 +111,9 @@ def main(page: ft.Page):
     page.padding = 10 if page.width < 600 else 20
     page.theme = ft.Theme(color_scheme_seed=ft.colors.BLUE)
 
+    def get_size(default, mobile):
+        return mobile if page.width < 600 else default
+
     # Диалог редактирования точки
     edit_dialog = ft.AlertDialog(
         modal=True,
@@ -469,9 +472,6 @@ def main(page: ft.Page):
             border_radius=10,
         )
     )
-
-    def get_size(default, mobile):
-        return mobile if page.width < 600 else default
 
 if __name__ == '__main__':
     ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=5000, host="0.0.0.0")
