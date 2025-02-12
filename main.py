@@ -336,6 +336,14 @@ def main(page: ft.Page):
         keyboard_type=ft.KeyboardType.NUMBER,
     )
 
+    # Создаем отдельные поля ввода для калибровки
+    calibration_pressure_input = ft.TextField(
+        label="Давление",
+        width=get_size(400, page.width * 0.9),
+        text_align=ft.TextAlign.LEFT,
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+
     weight_input = ft.TextField(
         label="Вес",
         width=get_size(400, page.width * 0.9),
@@ -412,13 +420,13 @@ def main(page: ft.Page):
 
     def add_calibration_point(e):
         try:
-            pressure = float(pressure_input.value)
+            pressure = float(calibration_pressure_input.value)
             weight = float(weight_input.value)
 
             if calc.add_point(pressure, weight):
                 result_text.value = "✅ Точка калибровки добавлена"
                 result_text.color = ft.colors.GREEN
-                pressure_input.value = ""
+                calibration_pressure_input.value = ""
                 weight_input.value = ""
                 update_display()
             else:
@@ -457,18 +465,19 @@ def main(page: ft.Page):
 
         table = ft.DataTable(
             columns=[
-                ft.DataColumn(ft.Text("Дата/Время")),
-                ft.DataColumn(ft.Text("Давление")),
-                ft.DataColumn(ft.Text("Вес")),
-                ft.DataColumn(ft.Text("Местоположение")),
+                ft.DataColumn(ft.Text("Дата/Время", size=14)),
+                ft.DataColumn(ft.Text("Давление", size=14)),
+                ft.DataColumn(ft.Text("Вес", size=14)),
+                ft.DataColumn(ft.Text("Местоположение", size=14)),
             ],
+            column_spacing=20,
             rows=[
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(record[0])),
-                        ft.DataCell(ft.Text(f"{record[1]:.2f}")),
-                        ft.DataCell(ft.Text(f"{record[2]:.2f}")),
-                        ft.DataCell(ft.Text(record[3])),
+                        ft.DataCell(ft.Text(record[0], size=14)),
+                        ft.DataCell(ft.Text(f"{record[1]:.2f}", size=14)),
+                        ft.DataCell(ft.Text(f"{record[2]:.2f}", size=14)),
+                        ft.DataCell(ft.Text(record[3], size=14)),
                     ],
                 ) for record in history
             ],
@@ -589,6 +598,7 @@ def main(page: ft.Page):
                                 size=16,
                                 weight=ft.FontWeight.BOLD
                             ),
+                            calibration_pressure_input,
                             weight_input,
                             add_button,
                         ]),
