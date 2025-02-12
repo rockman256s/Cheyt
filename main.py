@@ -248,7 +248,7 @@ def main(page: ft.Page):
                 )
             )
 
-            # Добавляем точки калибровки поверх линии
+            # Добавляем точки калибровки как маркеры
             chart.data_series.append(
                 ft.LineChartData(
                     color=ft.colors.RED,
@@ -262,8 +262,9 @@ def main(page: ft.Page):
             )
 
             return chart
-        except:
-            return ft.Text("Ошибка при создании графика")
+        except Exception as e:
+            print(f"Ошибка при создании графика: {str(e)}")
+            return ft.Text(f"Ошибка при создании графика: {str(e)}")
 
     # Таблица калибровочных точек
     def create_data_table():
@@ -290,7 +291,7 @@ def main(page: ft.Page):
                             ft.Row(
                                 controls=[
                                     ft.IconButton(
-                                        icon=ft.icons.EDIT_OUTLINED,
+                                        ft.icons.EDIT_OUTLINED,
                                         icon_color=ft.colors.BLUE,
                                         tooltip="Редактировать",
                                         data=point,
@@ -298,14 +299,14 @@ def main(page: ft.Page):
                                             e.control.data[0],
                                             e.control.data[1],
                                             e.control.data[2]
-                                        )
+                                        ),
                                     ),
                                     ft.IconButton(
-                                        icon=ft.icons.DELETE_OUTLINE,
+                                        ft.icons.DELETE_OUTLINE,
                                         icon_color=ft.colors.RED_400,
                                         tooltip="Удалить",
                                         data=point[0],
-                                        on_click=lambda e: delete_point(e.control.data)
+                                        on_click=lambda e: delete_point(e.control.data),
                                     ),
                                 ],
                                 alignment=ft.MainAxisAlignment.CENTER,
