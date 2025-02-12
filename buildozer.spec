@@ -32,6 +32,11 @@ android.enable_kiosk = False
 android.enable_split_config = true
 android.enable_asset_packs = false
 
+# Build settings
+android.build_mode = debug
+android.accept_sdk_license = True
+android.skip_update = True
+
 [buildozer]
 log_level = 2
 warn_on_root = 1
