@@ -15,7 +15,10 @@ class WeightCalculator:
         """Initialize database with proper schema"""
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS calibration_points
+
+        # Удаляем старую таблицу и создаем новую с полем id
+        c.execute('DROP TABLE IF EXISTS calibration_points')
+        c.execute('''CREATE TABLE calibration_points
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                      pressure REAL NOT NULL,
                      weight REAL NOT NULL)''')
@@ -73,7 +76,7 @@ class WeightCalculator:
             return False
 
     def delete_point(self, point_id):
-        """Delete calibration point by id"""
+        """Delete calibration point"""
         try:
             conn = sqlite3.connect(self.db_path)
             c = conn.cursor()
@@ -93,6 +96,7 @@ class WeightCalculator:
             pressures = np.array([p[1] for p in self.calibration_points])
             weights = np.array([p[2] for p in self.calibration_points])
 
+            # Линейная интерполяция для 2 точек, квадратичная для >2 точек
             if len(self.calibration_points) == 2:
                 f = interpolate.interp1d(pressures, weights, kind='linear', fill_value='extrapolate')
             else:
@@ -205,10 +209,13 @@ def main(page: ft.Page):
 
             # Создаем точки для интерполированной кривой
             x_interp = np.linspace(min(pressures), max(pressures), 50)
+
+            # Линейная интерполяция для 2 точек, квадратичная для >2 точек
             if len(calc.calibration_points) == 2:
                 f = interpolate.interp1d(pressures, weights, kind='linear')
             else:
                 f = interpolate.interp1d(pressures, weights, kind='quadratic')
+
             y_interp = f(x_interp)
 
             # График
@@ -241,7 +248,7 @@ def main(page: ft.Page):
                 )
             )
 
-            # Добавляем точки калибровки (как маленькие круги)
+            # Добавляем точки калибровки
             chart.data_series.append(
                 ft.LineChartData(
                     color=ft.colors.BLUE,
@@ -307,41 +314,6 @@ def main(page: ft.Page):
             ],
         )
 
-    # Поля ввода
-    pressure_input = ft.TextField(
-        label="Давление",
-        width=get_size(400, page.width * 0.9),
-        text_align=ft.TextAlign.LEFT,
-        keyboard_type=ft.KeyboardType.NUMBER,
-    )
-
-    weight_input = ft.TextField(
-        label="Вес",
-        width=get_size(400, page.width * 0.9),
-        text_align=ft.TextAlign.LEFT,
-        keyboard_type=ft.KeyboardType.NUMBER,
-    )
-
-    result_text = ft.Text(
-        size=get_size(16, 14),
-        text_align=ft.TextAlign.CENTER,
-        color=ft.colors.BLACK
-    )
-
-    # График и таблица
-    chart_container = ft.Container(
-        content=create_chart(),
-        height=get_size(400, 300),
-        border=ft.border.all(1, ft.colors.GREY_400),
-        border_radius=10,
-        padding=10,
-    )
-
-    data_table_container = ft.Container(
-        content=create_data_table(),
-        padding=10,
-    )
-
     def update_display():
         try:
             chart_container.content = create_chart()
@@ -374,6 +346,8 @@ def main(page: ft.Page):
 
     def delete_point(point_id):
         if calc.delete_point(point_id):
+            result_text.value = "✅ Точка калибровки удалена"
+            result_text.color = ft.colors.GREEN
             update_display()
         else:
             result_text.value = "❌ Ошибка удаления точки"
@@ -426,6 +400,11 @@ def main(page: ft.Page):
         height=get_size(400, 300),
         border=ft.border.all(1, ft.colors.GREY_400),
         border_radius=10,
+        padding=10,
+    )
+
+    data_table_container = ft.Container(
+        content=create_data_table(),
         padding=10,
     )
 
