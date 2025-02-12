@@ -219,8 +219,8 @@ class WeightCalculator:
             c = conn.cursor()
             c.execute("""INSERT INTO weight_history (date, pressure, weight, location)
                         VALUES (?, ?, ?, ?)""",
-                     (datetime.now().strftime("%m/%d/%Y %H:%M:%S"),
-                      pressure, weight, location))
+                     (datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                      pressure, weight, location)) #Corrected date format here
             conn.commit()
             conn.close()
             return True
@@ -592,7 +592,7 @@ def main(page: ft.Page):
             rows=[
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(datetime.strptime(record[0], "%m/%d/%Y %H:%M:%S").strftime("%m/%d/%Y"), size=12)),
+                        ft.DataCell(ft.Text(datetime.strptime(record[0], "%Y-%m-%d %H:%M:%S").strftime("%m/%d/%Y"), size=12)),
                         ft.DataCell(ft.Text(f"{record[1]:.2f}", size=12)),
                         ft.DataCell(ft.Text(f"{record[2]:.2f}", size=12)),
                         ft.DataCell(
