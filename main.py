@@ -581,25 +581,31 @@ def main(page: ft.Page):
 
         table = ft.DataTable(
             columns=[
-                ft.DataColumn(ft.Text("Дата/Время", size=12)),
-                ft.DataColumn(ft.Text("Давление", size=12)),
-                ft.DataColumn(ft.Text("Вес", size=12)),
-                ft.DataColumn(ft.Text("Местоположение", size=12, width=200)),
+                ft.DataColumn(ft.Text("Дата", size=12)),
+                ft.DataColumn(ft.Text("Давление", size=12), numeric=True),
+                ft.DataColumn(ft.Text("Вес", size=12), numeric=True),
+                ft.DataColumn(ft.Text("Местоположение", size=12)),
             ],
-            column_spacing=10,
+            column_spacing=5,
+            horizontal_margin=0,
+            width=page.width * 0.95 if page.width < 600 else page.width * 0.8,
             rows=[
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(record[0], size=12)),
+                        ft.DataCell(ft.Text(record[0].split()[0], size=12)),  # Только дата
                         ft.DataCell(ft.Text(f"{record[1]:.2f}", size=12)),
                         ft.DataCell(ft.Text(f"{record[2]:.2f}", size=12)),
                         ft.DataCell(
-                            ft.Text(
-                                record[3],
-                                size=12,
-                                width=200,
-                                max_lines=2,
-                                overflow=ft.TextOverflow.ELLIPSIS
+                            ft.Container(
+                                content=ft.Text(
+                                    record[3].replace(', ', ',\n'),  # Перенос после запятой
+                                    size=12,
+                                    width=page.width * 0.4,
+                                    max_lines=2,
+                                    text_align=ft.TextAlign.LEFT,
+                                    overflow=ft.TextOverflow.ELLIPSIS
+                                ),
+                                padding=ft.padding.only(right=10)
                             )
                         ),
                     ],
